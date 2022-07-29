@@ -11,7 +11,7 @@ Logger &Logger::instance() {
 void Logger::setLogLevel(int Level) { logLevel_ = Level; }
 
 // 写日志 格式：[日志级别] time : msg
-void Logger::log(std::string &msg) {
+void Logger::log(const std::string &msg) {
   switch (logLevel_) {
     case INFO:
       std::cout << "[INFO]";

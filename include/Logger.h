@@ -64,7 +64,7 @@ class Logger : noncopyable {
   void setLogLevel(int Level);
 
   // 写日志的接口
-  void log(std::string &msg);
+  void log(const std::string &msg);
 
  private:
   Logger() = default;
