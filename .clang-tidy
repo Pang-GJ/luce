@@ -42,6 +42,7 @@ Checks:     '
             -readability-convert-member-functions-to-static,
             -readability-make-member-function-const,
             -readability-qualified-auto,
+            -readability-identifier-length,
             -readability-redundant-access-specifiers,
             '
 # TODO(WAN): To be enabled in Fall 2020.
