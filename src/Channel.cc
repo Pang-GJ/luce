@@ -22,16 +22,14 @@ void Channel::tie(const std::shared_ptr<void> &obj) {
 // 当改变Channel所表示fd的events事件后，
 // update负责在Poller里面更改fd相应的事件epoll_ctl
 void Channel::update() {
-  // TODO(pgj):
   // 通过Channel所属的EventLoop调用Poller的相应方法
   // 然后在Poller里注册fd的events事件
-  // loop_->updateChannel(this);
+  loop_->updateChannel(this);
 }
 
 // 在Channel所属的EventLoop中将当前的Channel删除掉
 void Channel::remove() {
-  // TODO(pgj):
-  // loop_->removeChannel(this);
+  loop_->removeChannel(this);
 }
 
 void Channel::handleEvent(Timestamp receiveTime) {
