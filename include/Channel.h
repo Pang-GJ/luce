@@ -65,6 +65,7 @@ class Channel : noncopyable {
   // for Poller
   int index() const { return index_; }
   void set_index(int idx) { index_ = idx; }
+  void set_revents(int revents) { revents_ = revents; }
 
   // 当前Channel属于哪个EventLoop
   EventLoop *ownerLoop() const { return loop_; }
