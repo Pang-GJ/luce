@@ -29,6 +29,10 @@ std::string InetAddress::toIpPort() const {
 
 uint16_t InetAddress::toPort() const { return ntohs(addr_.sin_port); }
 
+const sockaddr *InetAddress::getSockAddr() const { 
+  return static_cast<const struct sockaddr *>(static_cast<const void *>(&addr_));
+}
+
 // 测试InetAddress
 //
 // #include <iostream>
