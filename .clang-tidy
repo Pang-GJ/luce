@@ -36,14 +36,19 @@ Checks:     '
             -bugprone-branch-clone,
             -bugprone-signed-char-misuse,
             -bugprone-unhandled-self-assignment,
+            -bugprone-easily-swappable-parameters,
             -clang-diagnostic-implicit-int-float-conversion,
             -modernize-use-auto,
             -modernize-use-trailing-return-type,
+            -modernize-pass-by-value,
+            -performance-move-constArg,
             -readability-convert-member-functions-to-static,
             -readability-make-member-function-const,
             -readability-qualified-auto,
             -readability-identifier-length,
             -readability-redundant-access-specifiers,
+            -readability-function-cognitive-complexity,
+            -google-readability-casting,
             '
 # TODO(WAN): To be enabled in Fall 2020.
 #CheckOptions:
