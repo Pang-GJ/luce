@@ -1,11 +1,12 @@
 #include "Buffer.h"
 
 #include <sys/uio.h>
+#include <unistd.h>
 #include <cerrno>
 
 // 从fd上读取数据,Poller工作在LT模式
 ssize_t Buffer::readFd(int fd, int *savedErrno) {
-  char extrabuf[65536]; // 栈上的空间, 64k 
+  char extrabuf[65536];  // 栈上的空间, 64k
   struct iovec vec[2];
 
   const size_t writable = writableBytes();
@@ -21,13 +22,21 @@ ssize_t Buffer::readFd(int fd, int *savedErrno) {
   if (n < 0) {
     *savedErrno = errno;
 
-  } else if (n <= writable) { // 此时extrabuf中不会有数据
+  } else if (n <= writable) {  // 此时extrabuf中不会有数据
     writerIndex_ += n;
-  } else { 
+  } else {
     // 此时extrabuf中有一部分数据
     writerIndex_ = buffer_.size();
     append(extrabuf, n - writable);
   }
 
+  return n;
+}
+
+ssize_t Buffer::writeFd(int fd, int *savedErrno) {
+  ssize_t n = ::write(fd, peek(), readableBytes());
+  if (n < 0) {
+    *savedErrno = errno;
+  }
   return n;
 }
