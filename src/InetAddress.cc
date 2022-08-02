@@ -10,6 +10,11 @@ InetAddress::InetAddress(uint16_t port, const std::string &ipv4) {
   addr_.sin_addr.s_addr = inet_addr(ipv4.c_str());
 }
 
+InetAddress::InetAddress() {
+  struct sockaddr_in addr;
+  addr_ = addr;
+}
+
 std::string InetAddress::toIp() const {
   char buf[64] = {0};
   ::inet_ntop(AF_INET, &addr_.sin_addr, buf, sizeof buf);
@@ -29,7 +34,7 @@ std::string InetAddress::toIpPort() const {
 
 uint16_t InetAddress::toPort() const { return ntohs(addr_.sin_port); }
 
-const sockaddr *InetAddress::getSockAddr() const { 
+const sockaddr *InetAddress::getSockAddr() const {
   return static_cast<const struct sockaddr *>(static_cast<const void *>(&addr_));
 }
 

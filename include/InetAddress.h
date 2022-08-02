@@ -10,6 +10,9 @@ class InetAddress {
 
   explicit InetAddress(const struct sockaddr_in &addr) : addr_(addr) {}
 
+  // 默认构造函数，尽量不要调用，目前在Acceptor::handleRead()中调用了
+  InetAddress();
+
   std::string toIp() const;
   std::string toIpPort() const;
   uint16_t toPort() const;
