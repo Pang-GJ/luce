@@ -20,8 +20,8 @@ TcpServer::TcpServer(EventLoop *loop, const InetAddress &listenAddr, const std::
       name_(name),
       acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
       threadPool_(new EventLoopThreadPool(loop, name_)),
-      connectionCallback_(),
-      messageCallback_(),
+      connectionCallback_(defaultConnectionCallback),
+      messageCallback_(defaultMessageCallback),
       nextConnId_(1) {
   acceptor_->setNewConnectionCallback(
       std::bind(&TcpServer::newConnection, this, std::placeholders::_1, std::placeholders::_2));
