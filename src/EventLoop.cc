@@ -81,6 +81,9 @@ void EventLoop::loop() {
     // ???疑惑：这里的回调跟channel的回调分别处理什么？？？
     doPendingFunctors();
   }
+
+  LOG_INFO("EventLoop %p stop looping \n", this);
+  looping_ = false;
 }
 
 void EventLoop::quit() {

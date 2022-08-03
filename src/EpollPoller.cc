@@ -95,7 +95,7 @@ void EpollPoller::removeChannel(Channel *channel) {
 }
 
 // 填写活跃的连接
-void EpollPoller::fillActiveChannels(int numEvents, ChannelList *activeChannels) {
+void EpollPoller::fillActiveChannels(int numEvents, ChannelList *activeChannels) const {
   for (int i = 0; i < numEvents; ++i) {
     Channel *channel = static_cast<Channel *>(events_[i].data.ptr);
     channel->set_revents(static_cast<int>(events_[i].events));
@@ -111,8 +111,13 @@ void EpollPoller::update(int operation, Channel *channel) {
   memset(&event, 0, sizeof event);
   int fd = channel->fd();
   event.events = channel->events();
+  // 这里导致过coredump
+  // 下面两个event.data的赋值，如果先ptr, 再fd,那么ptr就被fd覆盖了
+  // 同理，先fd再ptr，那么fd也被覆盖了，但是我们这里只用到了ptr
+  // event.data.ptr = channel;
+  // event.data.fd = fd;
+  event.data.fd = fd;  // It's not use
   event.data.ptr = channel;
-  event.data.fd = fd;
 
   if (::epoll_ctl(epollfd_, operation, fd, &event) < 0) {
     if (operation == EPOLL_CTL_DEL) {

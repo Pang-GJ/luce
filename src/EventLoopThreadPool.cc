@@ -1,20 +1,22 @@
 #include "EventLoopThreadPool.h"
 #include "EventLoopThread.h"
+#include "Logger.h"
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop *baseLoop, const std::string &name)
-    : baseLoop_(baseLoop), started_(false), numThreads_(0), next_(0) {
-  name_ = name;
+    : baseLoop_(baseLoop), name_(name), started_(false), numThreads_(0), next_(0) {
 }
 
 void EventLoopThreadPool::start(const ThreadInitCallback &cb) {
   started_ = true;
 
+  LOG_DEBUG("numThreads:%d \n", numThreads_);
   for (int i = 0; i < numThreads_; ++i) {
     char buf[name_.size() + 32];
     snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
+    LOG_DEBUG("creat EventLoopThread %d \n", i);
     EventLoopThread *t = new EventLoopThread(cb, buf);
-    threads_.emplace_back(std::unique_ptr<EventLoopThread>(t));
-    loops_.emplace_back(t->startLoop());  // 底层创建线程，绑定一个新的EventLoop
+    threads_.push_back(std::unique_ptr<EventLoopThread>(t));
+    loops_.push_back(t->startLoop());  // 底层创建线程，绑定一个新的EventLoop
   }
 
   if (numThreads_ == 0 && cb) {

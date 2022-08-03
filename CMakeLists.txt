@@ -13,6 +13,9 @@ set(CMAKE_CXX_STANDARD 11)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -fPIC")
 add_compile_options(-g -Wall -fPIC)
 
+# For Debug
+add_definitions(-DMUDEBUG)
+
 # 定义参与编译的源文件
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST) # .代表所有源文件
 
