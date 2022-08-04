@@ -29,7 +29,8 @@ int Socket::accept(InetAddress *peeraddr) {
   socklen_t len = sizeof addr;
   bzero(&addr, sizeof addr);
 
-  int connfd = ::accept(sockfd_, reinterpret_cast<struct sockaddr *>(&addr), &len);
+  // 这里需要设置非阻塞
+  int connfd = ::accept4(sockfd_, ( struct sockaddr * )(&addr), &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
   if (connfd >= 0) {
     peeraddr->setSockAddr(addr);
   }
