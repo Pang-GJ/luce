@@ -2,6 +2,8 @@
 
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class InetAddress;
 
 // 封装socket fd
@@ -26,3 +28,5 @@ class Socket : noncopyable {
  private:
   const int sockfd_;
 };
+
+}  // namespace luce::net

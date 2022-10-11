@@ -9,6 +9,8 @@
 #include "Thread.h"
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class EventLoopThread : noncopyable {
  public:
   using ThreadInitCallback = std::function<void(EventLoop *)>;
@@ -23,9 +25,11 @@ class EventLoopThread : noncopyable {
   void threadFunc();
 
   EventLoop *loop_;
-  bool exiting_;
+  [[maybe_unused]] bool exiting_;
   Thread thread_;
   std::mutex mutex_;
   std::condition_variable cond_;
   ThreadInitCallback callback_;
 };
+
+}  // namespace luce::net

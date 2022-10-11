@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace luce::net {
+
 class Channel;
 class EventLoop;
 
@@ -37,3 +39,5 @@ class Poller : noncopyable {
  private:
   EventLoop *ownerLoop_;  // 定义Poller所属的事件循环loop
 };
+
+}  // namespace luce::net

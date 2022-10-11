@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace luce::net {
+
 class Buffer {
  public:
   static const size_t kCheapPrepend = 8;
@@ -88,3 +90,5 @@ class Buffer {
   size_t readerIndex_;  // 读指针
   size_t writerIndex_;  // 写指针
 };
+
+}  // namespace luce::net

@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <cstring>
 
+namespace luce::net {
+
 Socket::~Socket() { close(sockfd_); }
 
 void Socket::bindAddress(const InetAddress &localaddr) {
@@ -30,7 +32,7 @@ int Socket::accept(InetAddress *peeraddr) {
   bzero(&addr, sizeof addr);
 
   // 这里需要设置非阻塞
-  int connfd = ::accept4(sockfd_, ( struct sockaddr * )(&addr), &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  int connfd = ::accept4(sockfd_, (struct sockaddr *)(&addr), &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
   if (connfd >= 0) {
     peeraddr->setSockAddr(addr);
   }
@@ -63,3 +65,5 @@ void Socket::setKeepAlive(bool on) {
   int optval = on ? 1 : 0;
   ::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof optval);
 }
+
+}  // namespace luce::net

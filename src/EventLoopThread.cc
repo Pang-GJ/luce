@@ -1,9 +1,10 @@
 #include "EventLoopThread.h"
 #include "Logger.h"
 
+namespace luce::net {
+
 EventLoopThread::EventLoopThread(const ThreadInitCallback &cb, const std::string &name)
-    : loop_(nullptr), exiting_(false), thread_(std::bind(&EventLoopThread::threadFunc, this), name), callback_(cb) {
-}
+    : loop_(nullptr), exiting_(false), thread_(std::bind(&EventLoopThread::threadFunc, this), name), callback_(cb) {}
 
 EventLoopThread::~EventLoopThread() {
   exiting_ = true;
@@ -47,3 +48,5 @@ void EventLoopThread::threadFunc() {
   std::unique_lock<std::mutex> lock(mutex_);
   loop_ = nullptr;
 }
+
+} // namespace luce::net

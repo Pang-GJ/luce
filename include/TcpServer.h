@@ -14,6 +14,8 @@
 #include <memory>
 #include <unordered_map>
 
+namespace luce::net {
+
 // 对外的服务器编程使用的类
 class TcpServer : noncopyable {
  public:
@@ -69,3 +71,5 @@ class TcpServer : noncopyable {
   int nextConnId_;
   ConnctionMap connections_;  // 保存所有的连接
 };
+
+}  // namespace luce::net

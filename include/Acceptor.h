@@ -5,6 +5,8 @@
 #include "Socket.h"
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class EventLoop;
 class InetAddress;
 
@@ -29,3 +31,5 @@ class Acceptor : noncopyable {
   NewConnectionCallback newConnectionCallback_;
   bool listenning_;
 };
+
+}  // namespace luce::net

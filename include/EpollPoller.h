@@ -5,6 +5,8 @@
 #include <sys/epoll.h>
 #include <vector>
 
+namespace luce::net {
+
 class EpollPoller : public Poller {
  public:
   explicit EpollPoller(EventLoop *loop);
@@ -29,3 +31,5 @@ class EpollPoller : public Poller {
   int epollfd_;
   EventList events_;
 };
+
+}  // namespace luce::net

@@ -2,9 +2,10 @@
 #include "EventLoopThread.h"
 #include "Logger.h"
 
+namespace luce::net {
+
 EventLoopThreadPool::EventLoopThreadPool(EventLoop *baseLoop, const std::string &name)
-    : baseLoop_(baseLoop), name_(name), started_(false), numThreads_(0), next_(0) {
-}
+    : baseLoop_(baseLoop), name_(name), started_(false), numThreads_(0), next_(0) {}
 
 void EventLoopThreadPool::start(const ThreadInitCallback &cb) {
   started_ = true;
@@ -46,3 +47,5 @@ std::vector<EventLoop *> EventLoopThreadPool::getAllLoops() {
   }
   return loops_;
 }
+
+} // namespace luce::net

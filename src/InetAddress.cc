@@ -3,6 +3,8 @@
 
 #include <cstring>
 
+namespace luce::net {
+
 InetAddress::InetAddress(uint16_t port, const std::string &ipv4) {
   bzero(&addr_, sizeof addr_);
   addr_.sin_family = AF_INET;
@@ -47,3 +49,5 @@ const sockaddr *InetAddress::getSockAddr() const {
 //   std::cout << addr.toIpPort() << std::endl;
 //   return 0;
 // }
+
+}  // namespace luce::net

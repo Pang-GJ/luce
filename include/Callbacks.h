@@ -6,6 +6,8 @@
 #include "Logger.h"
 #include "Timestamp.h"
 
+namespace luce::net {
+
 class Buffer;
 class TcpConnection;
 
@@ -22,3 +24,5 @@ using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr &, size_
 void defaultConnectionCallback(const TcpConnectionPtr &conn);
 
 void defaultMessageCallback(const TcpConnectionPtr &, Buffer *buf, Timestamp);
+
+}  // namespace luce::net

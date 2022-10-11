@@ -9,6 +9,8 @@
 #include <cerrno>
 #include <functional>
 
+namespace luce::net {
+
 static EventLoop *CheckLoopNotNull(EventLoop *loop) {
   if (loop == nullptr) {
     LOG_FATAL("%s:%s:%d TcpConnection Loop is null \n", __FILE__, __FUNCTION__, __LINE__);
@@ -194,3 +196,5 @@ void TcpConnection::handleError() {
   }
   LOG_ERROR("TcpConnection::handleError name:%s - SO_ERROR:%d \n", name_.c_str(), err);
 }
+
+}  // namespace luce::net

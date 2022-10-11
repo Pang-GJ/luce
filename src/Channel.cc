@@ -4,6 +4,8 @@
 
 #include <sys/epoll.h>
 
+namespace luce::net {
+
 // 跟muduo不同的是这里只实现了Epoll，muduo还实现了poll
 // 但我后期可能考虑重新设计这个网络库，可能考虑最新的io_uring
 const int Channel::kNoneEvent = 0;
@@ -28,9 +30,7 @@ void Channel::update() {
 }
 
 // 在Channel所属的EventLoop中将当前的Channel删除掉
-void Channel::remove() {
-  loop_->removeChannel(this);
-}
+void Channel::remove() { loop_->removeChannel(this); }
 
 void Channel::handleEvent(Timestamp receiveTime) {
   if (tied_) {
@@ -71,3 +71,5 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
     }
   }
 }
+
+}  // namespace luce::net

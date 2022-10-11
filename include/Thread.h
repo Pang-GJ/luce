@@ -8,6 +8,8 @@
 
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class Thread : noncopyable {
  public:
   using ThreadFunc = std::function<void()>;
@@ -35,3 +37,5 @@ class Thread : noncopyable {
   std::string name_;
   static std::atomic_int numCreated_;
 };
+
+}  // namespace luce::net

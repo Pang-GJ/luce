@@ -1,6 +1,8 @@
-#include <mymuduo/TcpServer.h>
-#include <mymuduo/Logger.h>
+#include <luce/TcpServer.h>
+#include <luce/Logger.h>
 #include <functional>
+
+using namespace luce::net;
 
 class EchoServer {
  public:

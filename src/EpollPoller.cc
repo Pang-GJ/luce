@@ -6,6 +6,8 @@
 #include <cerrno>
 #include <cstring>
 
+namespace luce::net {
+
 // channel未添加到Poller中
 const int kNew = -1;  // channel中的成员index_ = -1
 // channel已添加到Poller中
@@ -107,7 +109,7 @@ void EpollPoller::fillActiveChannels(int numEvents, ChannelList *activeChannels)
 
 // 更新channel 封装了epoll_ctl
 void EpollPoller::update(int operation, Channel *channel) {
-  struct epoll_event event;
+  struct epoll_event event{};
   memset(&event, 0, sizeof event);
   int fd = channel->fd();
   event.events = channel->events();
@@ -127,3 +129,5 @@ void EpollPoller::update(int operation, Channel *channel) {
     }
   }
 }
+
+}  // namespace luce::net

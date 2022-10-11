@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <cerrno>
 
+namespace luce::net {
+
 // 从fd上读取数据,Poller工作在LT模式
 ssize_t Buffer::readFd(int fd, int *savedErrno) {
   char extrabuf[65536];  // 栈上的空间, 64k
@@ -40,3 +42,5 @@ ssize_t Buffer::writeFd(int fd, int *savedErrno) {
   }
   return n;
 }
+
+}  // namespace luce::net

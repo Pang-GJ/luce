@@ -10,6 +10,8 @@
 #include "Timestamp.h"
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class Channel;
 class EventLoop;
 class Socket;
@@ -85,3 +87,5 @@ class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnec
   Buffer inputBuffer_;   // 接收数据的缓冲区
   Buffer outputBuffer_;  // 发送数据的缓冲区
 };
+
+}  // namespace luce::net

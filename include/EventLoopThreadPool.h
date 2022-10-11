@@ -7,6 +7,8 @@
 
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class EventLoop;
 class EventLoopThread;
 
@@ -39,3 +41,5 @@ class EventLoopThreadPool : noncopyable {
   std::vector<std::unique_ptr<EventLoopThread>> threads_;
   std::vector<EventLoop *> loops_;
 };
+
+}  // namespace luce::net

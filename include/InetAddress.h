@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <string>
 
+namespace luce::net {
+
 // 封装socket地址类型
 class InetAddress {
  public:
@@ -23,3 +25,5 @@ class InetAddress {
  private:
   struct sockaddr_in addr_;
 };
+
+}  // namespace luce::net

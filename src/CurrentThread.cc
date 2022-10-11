@@ -1,6 +1,6 @@
 #include "CurrentThread.h"
 
-namespace CurrentThread {
+namespace luce::net::CurrentThread {
 __thread int t_cachedTid = 0;
 
 void cacheTid() {
@@ -10,4 +10,4 @@ void cacheTid() {
   }
 }
 
-}  // namespace CurrentThread
+}  // namespace luce::net::CurrentThread

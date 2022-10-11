@@ -7,6 +7,8 @@
 #include "Logger.h"
 #include "TcpConnection.h"
 
+namespace luce::net {
+
 EventLoop *CheckLoopNotNull(EventLoop *loop) {
   if (loop == nullptr) {
     LOG_FATAL("%s:%s:%d mainLoop is null \n", __FILE__, __FUNCTION__, __LINE__);
@@ -22,7 +24,8 @@ TcpServer::TcpServer(EventLoop *loop, const InetAddress &listenAddr, const std::
       threadPool_(new EventLoopThreadPool(loop, name_)),
       connectionCallback_(defaultConnectionCallback),
       messageCallback_(defaultMessageCallback),
-      started_(0), nextConnId_(1) {
+      started_(0),
+      nextConnId_(1) {
   acceptor_->setNewConnectionCallback(
       std::bind(&TcpServer::newConnection, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -95,3 +98,5 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr &conn) {
   EventLoop *ioLoop = conn->getLoop();
   ioLoop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
 }
+
+}  // namespace luce::net

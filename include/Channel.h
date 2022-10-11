@@ -6,6 +6,8 @@
 #include <functional>
 #include <memory>
 
+namespace luce::net {
+
 class EventLoop;
 
 // 理清楚EventLoop、Channel、Poller之间的关系
@@ -95,3 +97,5 @@ class Channel : noncopyable {
   EventCallback closeCallback_;
   EventCallback errorCallback_;
 };
+
+}  // namespace luce::net

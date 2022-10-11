@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(mymuduo)
+project(luce)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(LIBRARY_OUTPUT_PATH, ${CMAKE_CURRENT_LIST_DIR}/lib)
 
 set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 # 设置调试信息
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -fPIC")
 add_compile_options(-g -Wall -fPIC)
@@ -20,6 +20,6 @@ add_definitions(-DMUDEBUG)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST) # .代表所有源文件
 
 # 编译生成动态库
-add_library(mymuduo SHARED ${SRC_LIST})
+add_library(luce SHARED ${SRC_LIST})
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)

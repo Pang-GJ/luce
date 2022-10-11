@@ -3,6 +3,8 @@
 
 #include <semaphore.h>
 
+namespace luce::net {
+
 std::atomic_int Thread::numCreated_{0};
 
 Thread::Thread(ThreadFunc func, const std::string &name)
@@ -46,3 +48,5 @@ void Thread::join() {
   joined_ = true;
   thread_->join();
 }
+
+}  // namespace luce::net

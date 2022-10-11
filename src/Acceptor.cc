@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <cerrno>
 
+namespace luce::net {
+
 static int createNonblocking() {
   int sockfd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
   if (sockfd < 0) {
@@ -52,3 +54,5 @@ void Acceptor::handleRead() {
     }
   }
 }
+
+}  // namespace luce::net

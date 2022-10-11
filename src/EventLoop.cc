@@ -11,6 +11,8 @@
 #include <memory>
 #include <mutex>
 
+namespace luce::net {
+
 // 防止一个线程创建多个EventLoop
 __thread EventLoop *t_loopInThisThread = nullptr;
 
@@ -111,8 +113,8 @@ void EventLoop::queueInLoop(const Functor &cb) {
   }
 
   // 唤醒相应的需要执行上面回调函数的loop线程了
-  if (!isInLoopThread() || callingPendingFunctors_) { // 当前loop正在执行回调，但是又有了新的回调添加进来
-    wakeup();  // 唤醒loop所在线程
+  if (!isInLoopThread() || callingPendingFunctors_) {  // 当前loop正在执行回调，但是又有了新的回调添加进来
+    wakeup();                                          // 唤醒loop所在线程
   }
 }
 
@@ -148,3 +150,5 @@ void EventLoop::doPendingFunctors() {
 
   callingPendingFunctors_ = false;
 }
+
+}  // namespace luce::net

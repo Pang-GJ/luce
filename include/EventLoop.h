@@ -11,6 +11,8 @@
 #include "Timestamp.h"
 #include "noncopyable.h"
 
+namespace luce::net {
+
 class Poller;
 class Channel;
 
@@ -70,3 +72,5 @@ class EventLoop : noncopyable {
   std::vector<Functor> pendingFunctors_;     // 存储loop需要执行的所有回调操作
   std::mutex mutex_;                         // 互斥锁，用来保护 pendingFunctors_的线程安全
 };
+
+}  // namespace luce::net
