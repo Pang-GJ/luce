@@ -39,7 +39,7 @@ class EchoServer {
   void onMessage(const TcpConnectionPtr &conn, Buffer *buf, Timestamp time) {
   std::string msg = buf->retrieveAllAsString();
     conn->send(msg);
-    conn->shutdown();
+    // conn->shutdown();
   }
 
   EventLoop *loop_;

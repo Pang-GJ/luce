@@ -1,5 +1,5 @@
 echoserver:
-	clang++ -o echoserver echoserver.cc -lmymuduo -lpthread -g
+	clang++ -o echoserver echoserver.cc -lluce -lpthread -g
 
 clean:
 	rm -rf echoserver
