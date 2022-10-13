@@ -1,25 +1,54 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.14...3.23)
 
-project(luce)
+project(luce
+        VERSION
+        1.0
+        DESCRIPTION
+        "awesome C++ Net Framework"
+        LANGUAGES
+        CXX
+        )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory
+  (or any directory with a CMakeLists.txt file).
+  Please make a build subdirectory.
+  Feel free to remove CMakeCache.txt and CMakeFiles."
+            )
+endif()
 
-# mymuduo最终编译成动态库，设置动态库路径,放在根目录的lib目录下面
-set(LIBRARY_OUTPUT_PATH, ${CMAKE_CURRENT_LIST_DIR}/lib)
+# For clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
-set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_STANDARD 17)
-# 设置调试信息
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -fPIC")
-add_compile_options(-g -Wall -fPIC)
+# Options
+option(BUILD_TESTS "Build test executable" OFF)
 
-# For Debug
-add_definitions(-DMUDEBUG)
+# add ccache
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    message(use ccache to speed compile!)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
 
-# 定义参与编译的源文件
-aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST) # .代表所有源文件
+set(LIBRARY_NAME luce)
 
-# 编译生成动态库
-add_library(luce SHARED ${SRC_LIST})
+# 3rdparty dir:
+set(PROJECT_TRDPARTY_DIR ${PROJECT_SOURCE_DIR}/3rdparty)
 
-include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+add_subdirectory(src)
+
+if (BUILD_TESTS)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(tests)
+endif (BUILD_TESTS)
+
+add_subdirectory(example)
+
+# cmake module
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+include(FormatAndTidy)

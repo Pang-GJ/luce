@@ -14,7 +14,7 @@ luce在意大利语中意味着“光”，这也是我对本项目的期望。
   - 参考点：
     - brpc bthread
     - PhotonLibOS
-    - C++20 corotinue （目前决定基于C++20, 未来的趋势）
+    - C++20 coroutine （目前决定基于C++20, 未来的趋势）
     - flare Fiber
 - io_uring
 - Async Log
