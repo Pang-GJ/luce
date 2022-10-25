@@ -1,14 +1,19 @@
 # only for CMake 3.12 or later:
 file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS
-        "${PROJECT_SOURCE_DIR}/include/*.h"
+        ${PROJECT_SOURCE_DIR}/include/*.h
+        ${PROJECT_SOURCE_DIR}/include/coroutine/*.hpp
         )
 
+message(STATUS ${HEADER_LIST})
 # Or you just add header file to HEADER_LIST one by one
 # set(HEADER_LIST "${PROJECT_SOURCE_DIR}/include/Hello.hpp")
 
 file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS
-        "${PROJECT_SOURCE_DIR}/src/*.cpp"
+        ${PROJECT_SOURCE_DIR}/src/*.cc
+        ${PROJECT_SOURCE_DIR}/src/*.cpp
         )
+
+message(STATUS ${SOURCE_LIST})
 
 add_library(${LIBRARY_NAME} ${SOURCE_LIST} ${HEADER_LIST})
 

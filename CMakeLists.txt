@@ -1,13 +1,6 @@
-cmake_minimum_required(VERSION 3.14...3.23)
+cmake_minimum_required(VERSION 3.14)
 
-project(luce
-        VERSION
-        1.0
-        DESCRIPTION
-        "awesome C++ Net Framework"
-        LANGUAGES
-        CXX
-        )
+project(luce)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -20,7 +13,7 @@ if(EXISTS "${LOC_PATH}")
 endif()
 
 # For clangd
-set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Options
 option(BUILD_TESTS "Build test executable" OFF)
