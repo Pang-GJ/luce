@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 #include <cstdio>
 #include <functional>
-#include "common/Logger.h"
+#include "common/logger.hpp"
 #include "net/Callbacks.h"
 #include "net/TcpConnection.h"
 

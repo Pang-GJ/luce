@@ -1,7 +1,8 @@
 # only for CMake 3.12 or later:
 file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS
-        ${PROJECT_SOURCE_DIR}/include/*.h
-        ${PROJECT_SOURCE_DIR}/include/coroutine/*.hpp
+        # ${PROJECT_SOURCE_DIR}/include/*.h
+        ${PROJECT_SOURCE_DIR}/include/*.hpp
+        # ${PROJECT_SOURCE_DIR}/include/coroutine/*.hpp
         )
 
 message(STATUS ${HEADER_LIST})
@@ -9,7 +10,7 @@ message(STATUS ${HEADER_LIST})
 # set(HEADER_LIST "${PROJECT_SOURCE_DIR}/include/Hello.hpp")
 
 file(GLOB_RECURSE SOURCE_LIST CONFIGURE_DEPENDS
-        ${PROJECT_SOURCE_DIR}/src/*.cc
+        # ${PROJECT_SOURCE_DIR}/src/*.cc
         ${PROJECT_SOURCE_DIR}/src/*.cpp
         )
 

@@ -3,8 +3,8 @@
 #include <functional>
 #include <memory>
 
-#include "common/Logger.h"
 #include "common/Timestamp.h"
+#include "common/logger.hpp"
 
 namespace luce::net {
 

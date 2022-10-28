@@ -35,7 +35,7 @@
     exit(-1);                                         \
   } while (0)
 
-#ifdef MUDEBUG
+#ifdef LUCEDEBUG
 #define LOG_DEBUG(LogmsgFormat, ...)                  \
   do {                                                \
     Logger &logger = Logger::instance();              \

@@ -1,9 +1,10 @@
-#include "coroutine/task.hpp"
-#include <iostream>
-#include <fmt/core.h>
 #include <fmt/chrono.h>
+#include <fmt/core.h>
+#include <iostream>
+#include <thread>
+#include "coro/task.hpp"
 
-Task<int> simple_task2() {
+coro::Task<int> simple_task2() {
   fmt::print("task 2 start...\n");
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(1s);
@@ -11,7 +12,7 @@ Task<int> simple_task2() {
   co_return 2;
 }
 
-Task<int> simple_task3() {
+coro::Task<int> simple_task3() {
   fmt::print("task 3 start...\n");
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
@@ -19,7 +20,7 @@ Task<int> simple_task3() {
   co_return 3;
 }
 
-Task<int> simple_task() {
+coro::Task<int> simple_task() {
   fmt::print("task start...\n");
   auto result2 = co_await simple_task2();
   fmt::print("waiting for result2...\n");
