@@ -30,8 +30,12 @@ coro::Task<int> simple_task() {
   co_return 1 + result2 + result3;
 }
 
+coro::Task<int> ans() { co_return 42; }
+
 int main(int argc, char *argv[]) {
-  auto task = simple_task();
+//    auto task = simple_task();
+  auto task = ans();
+//  task.resume();
   fmt::print("the result of simple_task: {}\n", task.GetResult());
   return 0;
 }

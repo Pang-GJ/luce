@@ -38,10 +38,15 @@ class Socket : noncopyable {
 
   auto send(void *buffer, std::size_t len) -> AsyncSend;
 
+  void SetCoroRecv(std::coroutine_handle<> handle) { coro_recv_ = handle; }
+
+  void SetCoroSend(std::coroutine_handle<> handle) { coro_send_ = handle; }
+
+  auto GetIOContext() const -> IOContext & { return io_context_; }
+
+  auto GetFd() const -> int { return fd_; }
+
  private:
-  friend AsyncAccept;
-  friend AsyncRecv;
-  friend AsyncSend;
   friend IOContext;
 
   explicit Socket(int fd, IOContext &io_context);

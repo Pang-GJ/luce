@@ -1,5 +1,6 @@
 #include <sys/epoll.h>
 #include <cerrno>
+#include <vector>
 
 #include "common/logger.hpp"
 #include "net/io_context.hpp"
@@ -14,12 +15,20 @@ IOContext::IOContext() : fd_(epoll_create1(EPOLL_CLOEXEC)) {
 }
 
 void IOContext::Run() {
-  struct epoll_event events[max_events];
+  // vector dynamic allocate space
+  std::vector<struct epoll_event> events(init_events);
 
   while (true) {
-    int nfds = epoll_wait(fd_, events, max_events, -1);
+    int nfds =
+        epoll_wait(fd_, &*events.begin(), static_cast<int>(events.size()), -1);
     if (nfds == -1) {
+      // TODO(pgj): deal with intercept signal
       LOG_FATAL("epoll_wait error");
+    }
+
+    // check to double the size
+    if (nfds == static_cast<int>(events.size())) {
+      events.resize(events.size() * 2);
     }
 
     for (int i = 0; i < nfds; ++i) {
@@ -57,7 +66,6 @@ void IOContext::UpdateState(Socket *socket, unsigned int new_state) {
     ev.events = new_state;
     ev.data.ptr = socket;
     if (epoll_ctl(fd_, EPOLL_CTL_MOD, socket->fd_, &ev) == -1) {
-      LOG_INFO("errno num: %d\n", errno);
       LOG_FATAL("epoll_ctl: mod error!\n");
     }
     socket->io_state_ = new_state;

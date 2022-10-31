@@ -33,7 +33,7 @@ class IOContext {
   inline void UpdateState(Socket *socket, unsigned int new_state);
 
   // TODO(pgj): update max events
-  constexpr static std::size_t max_events = 10;
+  constexpr static std::size_t init_events = 16;
   const int fd_;
 };
 

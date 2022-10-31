@@ -11,7 +11,7 @@
 namespace net {
 
 // implement async syscall
-template <typename Syscall, typename ReturnType>
+template <typename SyscallOpt, typename ReturnType>
 class AsyncSyscall {
  public:
   AsyncSyscall() = default;
@@ -19,19 +19,19 @@ class AsyncSyscall {
   auto await_ready() const noexcept -> bool { return false; }
 
   auto await_suspend(std::coroutine_handle<> handle) noexcept -> bool {
-    static_assert(std::is_base_of_v<AsyncSyscall, Syscall>);
+    static_assert(std::is_base_of_v<AsyncSyscall, SyscallOpt>);
     handle_ = handle;
-    value_ = static_cast<Syscall *>(this)->Syscall();
+    value_ = static_cast<SyscallOpt *>(this)->Syscall();
     suspend_ = value_ == -1 && (errno == EAGAIN || errno == EWOULDBLOCK);
     if (suspend_) {
-      static_cast<Syscall *>(this)->SetCoroHandle();
+      static_cast<SyscallOpt *>(this)->SetCoroHandle();
     }
     return suspend_;
   }
 
   auto await_resume() noexcept -> ReturnType {
     if (suspend_) {
-      value_ = static_cast<Syscall *>(this)->Syscall();
+      value_ = static_cast<SyscallOpt *>(this)->Syscall();
     }
     return value_;
   }
@@ -44,24 +44,24 @@ class AsyncSyscall {
 
 class AsyncAccept : public AsyncSyscall<AsyncAccept, int> {
  public:
-  explicit AsyncAccept(Socket *socket) : AsyncSyscall{}, socket_(socket) {
-    socket_->io_context_.WatchRead(socket_);
+  explicit AsyncAccept(Socket *socket) : socket_(socket) {
+    socket_->GetIOContext().WatchRead(socket_);
     LOG_DEBUG("socket accept operation \n");
   }
 
   ~AsyncAccept() {
-    socket_->io_context_.UnWatchRead(socket_);
+    socket_->GetIOContext().UnWatchRead(socket_);
     LOG_DEBUG("~socket accept operation \n");
   }
 
   int Syscall() {
     struct sockaddr_in addr {};
     socklen_t addr_len = sizeof addr;
-    LOG_DEBUG("accept %d\n", socket_->fd_);
-    return ::accept(socket_->fd_, (struct sockaddr *)&addr, &addr_len);
+    LOG_DEBUG("accept %d\n", socket_->GetFd());
+    return ::accept(socket_->GetFd(), (struct sockaddr *)&addr, &addr_len);
   }
 
-  void SetCoroHandle() { socket_->coro_recv_ = this->handle_; }
+  void SetCoroHandle() { socket_->SetCoroRecv(this->handle_); }
 
  private:
   Socket *socket_;
@@ -70,22 +70,22 @@ class AsyncAccept : public AsyncSyscall<AsyncAccept, int> {
 class AsyncSend : public AsyncSyscall<AsyncSend, ssize_t> {
  public:
   AsyncSend(Socket *socket, void *buffer, std::size_t len)
-      : AsyncSyscall{}, socket_(socket), buffer_(buffer), len_(len) {
-    socket_->io_context_.WatchWrite(socket_);
+      : socket_(socket), buffer_(buffer), len_(len) {
+    socket_->GetIOContext().WatchWrite(socket_);
     LOG_DEBUG("socket send operation\n");
   }
 
   ~AsyncSend() {
-    socket_->io_context_.UnWatchWrite(socket_);
+    socket_->GetIOContext().UnWatchWrite(socket_);
     LOG_DEBUG("~socket send operation\n");
   }
 
   ssize_t Syscall() {
-    LOG_DEBUG("send fd: %d\n", socket_->fd_);
-    return ::send(socket_->fd_, buffer_, len_, 0);
+    LOG_DEBUG("send fd: %d\n", socket_->GetFd());
+    return ::send(socket_->GetFd(), buffer_, len_, 0);
   }
 
-  void SetCoroHandle() { socket_->coro_send_ = this->handle_; }
+  void SetCoroHandle() { socket_->SetCoroSend(this->handle_); }
 
  private:
   Socket *socket_;
@@ -96,22 +96,22 @@ class AsyncSend : public AsyncSyscall<AsyncSend, ssize_t> {
 class AsyncRecv : public AsyncSyscall<AsyncRecv, ssize_t> {
  public:
   AsyncRecv(Socket *socket, void *buffer, std::size_t len)
-      : AsyncSyscall{}, socket_(socket), buffer_(buffer), len_(len) {
-    socket_->io_context_.WatchRead(socket_);
+      : socket_(socket), buffer_(buffer), len_(len) {
+    socket_->GetIOContext().WatchRead(socket_);
     LOG_DEBUG("socket recv operation\n");
   }
 
   ~AsyncRecv() {
-    socket_->io_context_.UnWatchRead(socket_);
+    socket_->GetIOContext().UnWatchRead(socket_);
     LOG_DEBUG("~socket recv operation\n");
   }
 
   ssize_t Syscall() {
-    LOG_DEBUG("recv fd: %d\n", socket_->fd_);
-    return ::recv(socket_->fd_, buffer_, len_, 0);
+    LOG_DEBUG("recv fd: %d\n", socket_->GetFd());
+    return ::recv(socket_->GetFd(), buffer_, len_, 0);
   }
 
-  void SetCoroHandle() { socket_->coro_recv_ = handle_; }
+  void SetCoroHandle() { socket_->SetCoroRecv(this->handle_); }
 
  private:
   Socket *socket_;

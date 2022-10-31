@@ -1,6 +1,6 @@
 #include "common/logger.hpp"
-#include "coro/hook_awaiters.hpp"
 #include "coro/task.hpp"
+#include "net/async_syscall.hpp"
 #include "net/io_context.hpp"
 #include "net/socket.hpp"
 
@@ -13,7 +13,7 @@ coro::Task<bool> inside_loop(net::Socket &socket) {
     if (res <= 0) {
       co_return false;
     }
-    send_len = res;
+    send_len += res;
   }
   LOG_INFO("Done send\n");
   if (recv_len <= 0) {
@@ -25,18 +25,18 @@ coro::Task<bool> inside_loop(net::Socket &socket) {
 
 coro::Task<> echo_socket(std::shared_ptr<net::Socket> socket) {
   while (true) {
-    LOG_INFO("BEGIN!\n");
+    LOG_INFO("socket %d BEGIN!\n", socket->GetFd());
     bool b = co_await inside_loop(*socket);
     if (!b) {
       break;
     }
-    LOG_INFO("END\n");
+    LOG_INFO("socket %d END!\n", socket->GetFd());
   }
 }
 
-coro::Task<> accept(net::Socket &listen) {
+coro::Task<> accept(net::Socket &listen_sock) {
   while (true) {
-    auto socket = co_await listen.accept();
+    auto socket = co_await listen_sock.accept();
     auto t = echo_socket(socket);
     t.resume();
   }
@@ -44,8 +44,8 @@ coro::Task<> accept(net::Socket &listen) {
 
 int main(int argc, char *argv[]) {
   net::IOContext io_context;
-  net::Socket listen{"127.0.0.1", 10009, io_context};
-  auto t = accept(listen);
+  net::Socket listen_sock{"127.0.0.1", 10009, io_context};
+  auto t = accept(listen_sock);
   t.resume();
 
   io_context.Run();

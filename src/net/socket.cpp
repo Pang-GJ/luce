@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "common/logger.hpp"
-#include "coro/hook_awaiters.hpp"
+#include "net/async_syscall.hpp"
 #include "net/socket.hpp"
 
 namespace net {
@@ -39,7 +39,10 @@ Socket::Socket(std::string_view ip, unsigned port, IOContext &io_context)
 
 Socket::Socket(int fd, net::IOContext &io_context)
     : fd_(fd), io_context_(io_context) {
-  fcntl(fd_, F_SETFL, O_NONBLOCK);
+  // TODO(pgj): make a func to call
+  auto flag = fcntl(fd_, F_GETFL);
+  flag |= O_NONBLOCK;
+  fcntl(fd_, F_SETFL, flag);
   io_context_.Attach(this);
 }
 
@@ -50,6 +53,13 @@ Socket::~Socket() {
   io_context_.Detach(this);
   LOG_DEBUG("close fd = %d\n", fd_);
   ::close(fd_);
+  // TODO(pgj): destroy the coroutine ???
+  if (coro_send_) {
+    coro_send_.destroy();
+  }
+  if (coro_recv_) {
+    coro_recv_.destroy();
+  }
 }
 
 auto Socket::accept() -> coro::Task<std::shared_ptr<Socket>> {
