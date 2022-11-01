@@ -4,6 +4,7 @@
 #include <thread>
 #include "coro/task.hpp"
 
+
 coro::Task<int> simple_task2() {
   fmt::print("task 2 start...\n");
   using namespace std::chrono_literals;
@@ -33,8 +34,8 @@ coro::Task<int> simple_task() {
 coro::Task<int> ans() { co_return 42; }
 
 int main(int argc, char *argv[]) {
-//    auto task = simple_task();
-  auto task = ans();
+    auto task = simple_task();
+//  auto task = ans();
 //  task.resume();
   fmt::print("the result of simple_task: {}\n", task.GetResult());
   return 0;

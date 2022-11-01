@@ -1,8 +1,8 @@
 # only for CMake 3.12 or later:
 file(GLOB_RECURSE HEADER_LIST CONFIGURE_DEPENDS
         # ${PROJECT_SOURCE_DIR}/include/*.h
-        ${PROJECT_SOURCE_DIR}/include/*.hpp
-        # ${PROJECT_SOURCE_DIR}/include/coroutine/*.hpp
+#        ${PROJECT_SOURCE_DIR}/include/*.hpp
+         ${PROJECT_SOURCE_DIR}/include/coro/*.hpp
         )
 
 message(STATUS ${HEADER_LIST})
