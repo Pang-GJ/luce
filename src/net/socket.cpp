@@ -5,13 +5,15 @@
 #include <cstring>
 
 #include "common/logger.hpp"
-#include "net/async_syscall.hpp"
+// #include "net/async_syscall.hpp"
+#include "net/event_manager.hpp"
+#include "net/io_awaiter.hpp"
 #include "net/socket.hpp"
 
 namespace net {
 
-Socket::Socket(std::string_view ip, unsigned port, IOContext &io_context)
-    : io_context_(io_context) {
+Socket::Socket(std::string_view ip, unsigned port, EventManager &event_manager)
+    : event_manager_(event_manager) {
   struct sockaddr_in addr {};
   bzero(&addr, sizeof addr);
   addr.sin_family = AF_INET;
@@ -33,67 +35,48 @@ Socket::Socket(std::string_view ip, unsigned port, IOContext &io_context)
     LOG_FATAL("listen error\n");
   }
 
-  io_context_.Attach(this);
-  io_context.WatchRead(this);
+  //   io_context_.Attach(this);
+  // io_context.WatchRead(this);
+  event_manager_.Attach(this);
+//  event_manager_.AddRecv(this, std::noop_coroutine());
 }
 
-Socket::Socket(int fd, net::IOContext &io_context)
-    : fd_(fd), io_context_(io_context) {
+Socket::Socket(int fd, EventManager &event_manager)
+    : fd_(fd), event_manager_(event_manager) {
   // TODO(pgj): make a func to call
   auto flag = fcntl(fd_, F_GETFL);
   flag |= O_NONBLOCK;
   fcntl(fd_, F_SETFL, flag);
-  io_context_.Attach(this);
+  // io_context_.Attach(this);
 }
 
 Socket::~Socket() {
   if (fd_ == -1) {
     return;
   }
-  io_context_.Detach(this);
+  // io_context_.Detach(this);
+  event_manager_.Detach(this);
   LOG_DEBUG("close fd = %d\n", fd_);
   ::close(fd_);
-  // TODO(pgj): destroy the coroutine ???
-  if (coro_send_) {
-    coro_send_.destroy();
-  }
-  if (coro_recv_) {
-    coro_recv_.destroy();
-  }
 }
 
 auto Socket::accept() -> coro::Task<std::shared_ptr<Socket>> {
-  int fd = co_await AsyncAccept{this};
-  if (fd == -1) {
-    LOG_FATAL("accept error\n");
+  // int fd = co_await AcceptAwaiter{this};
+  struct  sockaddr_in addr{};
+  socklen_t len = sizeof addr;
+  int fd = ::accept(fd_, (struct sockaddr *)&addr, &len);
+  if (fd != -1) {
+    LOG_INFO("accept %d", fd);
   }
-  co_return std::shared_ptr<Socket>(new Socket(fd, io_context_));
+  co_return std::shared_ptr<Socket>(new Socket(fd, event_manager_));
 }
 
-auto Socket::recv(void *buffer, std::size_t len) -> AsyncRecv {
+auto Socket::recv(void *buffer, std::size_t len) -> RecvAwaiter {
   return {this, buffer, len};
 }
 
-auto Socket::send(void *buffer, std::size_t len) -> AsyncSend {
+auto Socket::send(void *buffer, std::size_t len) -> SendAwaiter {
   return {this, buffer, len};
-}
-
-auto Socket::ResumeRecv() -> bool {
-  if (!coro_recv_) {
-    LOG_INFO("no handle for recv.\n");
-    return false;
-  }
-  coro_recv_.resume();
-  return true;
-}
-
-auto Socket::ResumeSend() -> bool {
-  if (!coro_send_) {
-    LOG_INFO("no handle for send.\n");
-    return false;
-  }
-  coro_send_.resume();
-  return true;
 }
 
 }  // namespace net

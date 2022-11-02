@@ -4,8 +4,8 @@ find_package(doctest REQUIRED)
 
 # TODO: list all files containg tests
 set(TEST_FILES
-        ./coroutine/test_task.cpp
-#        ./net/echo_server.cpp
+        # ./coroutine/test_task.cpp
+       ./net/echo_server.cpp
         )
 
 # Or you just add all the .cpp file under tests folder

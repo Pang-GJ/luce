@@ -1,8 +1,7 @@
 #include "common/logger.hpp"
 #include "coro/task.hpp"
-#include "net/async_syscall.hpp"
-#include "net/io_context.hpp"
 #include "net/socket.hpp"
+#include "net/io_awaiter.hpp"
 
 coro::Task<bool> inside_loop(net::Socket &socket) {
   char buffer[1024] = {0};
@@ -37,16 +36,20 @@ coro::Task<> echo_socket(std::shared_ptr<net::Socket> socket) {
 coro::Task<> accept(net::Socket &listen_sock) {
   while (true) {
     auto socket = co_await listen_sock.accept();
-    auto t = echo_socket(socket);
-    t.resume();
+    if (socket->GetFd() != -1) {
+      auto t = echo_socket(socket);
+    }
+    // t.resume();
   }
 }
 
 int main(int argc, char *argv[]) {
-  net::IOContext io_context;
-  net::Socket listen_sock{"127.0.0.1", 10009, io_context};
+  // net::IOContext io_context;
+  net::EventManager event_manager;
+  net::Socket listen_sock{"127.0.0.1", 10009, event_manager};
   auto t = accept(listen_sock);
-  t.resume();
+  // t.resume();
 
-  io_context.Run();
+  // io_context.Run();
+  event_manager.Start();
 }
