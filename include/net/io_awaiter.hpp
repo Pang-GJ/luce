@@ -17,15 +17,18 @@ class RecvAwaiter {
 
   // if IO is ready (recv_ > 0), then we should not suspend
   auto await_ready() -> bool {
+    LOG_DEBUG("recv ready");
     recv_ = ::read(socket_->GetFd(), buffer_, len_);
     return recv_ >= 0;
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
+    LOG_DEBUG("recv suspend");
     socket_->GetEventManager().AddRecv(socket_, handle);
   }
 
   auto await_resume() -> ssize_t {
+    LOG_DEBUG("recv resume");
     if (recv_ < 0) {
       socket_->GetEventManager().DelRecv(socket_);
       recv_ = ::read(socket_->GetFd(), buffer_, len_);
@@ -46,15 +49,18 @@ class SendAwaiter {
       : socket_(socket), buffer_(buffer), len_(len) {}
 
   auto await_ready() -> bool {
+    LOG_DEBUG("send ready");
     send_ = ::write(socket_->GetFd(), buffer_, len_);
     return send_ >= 0;
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
+    LOG_DEBUG("send suspend");
     socket_->GetEventManager().AddSend(socket_, handle);
   }
 
   auto await_resume() -> ssize_t {
+    LOG_DEBUG("send resume");
     if (send_ < 0) {
       socket_->GetEventManager().DelSend(socket_);
       send_ = ::write(socket_->GetFd(), buffer_, len_);

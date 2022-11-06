@@ -1,9 +1,12 @@
 #include "common/logger.hpp"
 #include "coro/task.hpp"
-#include "net/socket.hpp"
 #include "net/io_awaiter.hpp"
+#include "net/socket.hpp"
 
-coro::Task<bool> inside_loop(net::Socket &socket) {
+#include <future>
+#include <thread>
+
+coro::Task<bool> do_io(net::Socket &socket) {
   char buffer[1024] = {0};
   ssize_t recv_len = co_await socket.recv(buffer, sizeof buffer);
   ssize_t send_len = 0;
@@ -22,11 +25,12 @@ coro::Task<bool> inside_loop(net::Socket &socket) {
   co_return true;
 }
 
-coro::Task<> echo_socket(std::shared_ptr<net::Socket> socket) {
+coro::Task<> do_io_loop(std::shared_ptr<net::Socket> socket) {
   while (true) {
     LOG_INFO("socket %d BEGIN!\n", socket->GetFd());
-    bool b = co_await inside_loop(*socket);
+    bool b = co_await do_io(*socket);
     if (!b) {
+      LOG_INFO("client close");
       break;
     }
     LOG_INFO("socket %d END!\n", socket->GetFd());
@@ -37,19 +41,17 @@ coro::Task<> accept(net::Socket &listen_sock) {
   while (true) {
     auto socket = co_await listen_sock.accept();
     if (socket->GetFd() != -1) {
-      auto t = echo_socket(socket);
+      do_io_loop(socket);
     }
-    // t.resume();
   }
 }
 
 int main(int argc, char *argv[]) {
-  // net::IOContext io_context;
   net::EventManager event_manager;
   net::Socket listen_sock{"127.0.0.1", 10009, event_manager};
-  auto t = accept(listen_sock);
-  // t.resume();
 
-  // io_context.Run();
+  std::thread t1([&listen_sock]() { accept(listen_sock); });
+
   event_manager.Start();
+  t1.detach();
 }

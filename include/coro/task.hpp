@@ -6,21 +6,28 @@
 #include <future>
 #include <utility>
 
+#include "common/logger.hpp"
+
 namespace coro {
 
 // make ValueReturner to not write PromiseBase<void>
 template <typename T>
 class ValueReturner {
  public:
-  void return_value(T &&value) { promise_.set_value(std::forward<T>(value)); }
-  std::promise<T> promise_;
+  void return_value(T &&value) { value_ = T(std::move(value)); }
+  // std::promise<T> promise_;
+  //
+  auto GetResult() -> T { return value_; }
+  T value_;
 };
 
 template <>
 class ValueReturner<void> {
  public:
-  void return_void() { promise_.set_value(); }
-  std::promise<void> promise_;
+  void return_void() {}
+
+  void GetResult() {}
+  // std::promise<void> promise_;
 };
 
 template <typename T, typename CoroHandle>
@@ -60,23 +67,25 @@ template <typename T = void>
 struct Task {
   struct promise_type
       : public PromiseBase<T, std::coroutine_handle<promise_type>> {
-    promise_type() : future_(this->promise_.get_future()) {}
+    promise_type() = default;
 
     auto get_return_object() -> Task<T> {
       return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
     }
 
     void unhandled_exception() {
-      this->promise_.set_exception(std::current_exception());
+      // this->promise_.set_exception(std::current_exception());
+      // not handle exception now
+      LOG_FATAL("unhandled exception");
     }
 
-    auto GetFuture() -> std::future<T> & { return future_; }
+    // auto GetFuture() -> std::future<T> & { return future_; }
 
     void SetDetachedTask(std::coroutine_handle<promise_type> handle) {
       this->release_detached_ = handle;
     }
 
-    std::future<T> future_;
+    // std::future<T> future_;
   };
 
   struct TaskAwaiter {
@@ -89,7 +98,7 @@ struct Task {
       handle_.promise().continuation_ = continuation;
     }
 
-    auto await_resume() { return handle_.promise().future_.get(); }
+    auto await_resume() { return handle_.promise().GetResult(); }
 
     std::coroutine_handle<promise_type> handle_;
   };
@@ -106,7 +115,11 @@ struct Task {
     if (!detached_) {
       if (!handle_.done()) {
         handle_.promise().SetDetachedTask(handle_);
-        GetFuture().get();
+        try {
+          // GetFuture().get();
+        } catch (std::exception &e) {
+          LOG_ERROR(e.what());
+        }
       } else {
         handle_.destroy();
       }
@@ -115,11 +128,11 @@ struct Task {
 
   auto operator co_await() const { return TaskAwaiter(handle_); }
 
-  auto GetFuture() const -> std::future<T> & {
-    return handle_.promise().GetFuture();
-  }
+  // auto GetFuture() const -> std::future<T> & {
+  //   return handle_.promise().GetFuture();
+  // }
 
-  auto GetResult() const -> T { return GetFuture().get(); }
+  auto GetResult() const -> T { return handle_.promise().GetResult(); }
 
   void resume() { handle_.resume(); }
 

@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "common/logger.hpp"
-// #include "net/async_syscall.hpp"
 #include "net/event_manager.hpp"
 #include "net/io_awaiter.hpp"
 #include "net/socket.hpp"
@@ -34,11 +33,6 @@ Socket::Socket(std::string_view ip, unsigned port, EventManager &event_manager)
   if (::listen(fd_, 8) != 0) {
     LOG_FATAL("listen error\n");
   }
-
-  //   io_context_.Attach(this);
-  // io_context.WatchRead(this);
-  event_manager_.Attach(this);
-//  event_manager_.AddRecv(this, std::noop_coroutine());
 }
 
 Socket::Socket(int fd, EventManager &event_manager)
@@ -47,24 +41,24 @@ Socket::Socket(int fd, EventManager &event_manager)
   auto flag = fcntl(fd_, F_GETFL);
   flag |= O_NONBLOCK;
   fcntl(fd_, F_SETFL, flag);
-  // io_context_.Attach(this);
 }
 
 Socket::~Socket() {
   if (fd_ == -1) {
     return;
   }
-  // io_context_.Detach(this);
-  event_manager_.Detach(this);
+  if (!detached_) {
+    event_manager_.Detach(this);
+  }
   LOG_DEBUG("close fd = %d\n", fd_);
   ::close(fd_);
 }
 
 auto Socket::accept() -> coro::Task<std::shared_ptr<Socket>> {
-  // int fd = co_await AcceptAwaiter{this};
-  struct  sockaddr_in addr{};
-  socklen_t len = sizeof addr;
-  int fd = ::accept(fd_, (struct sockaddr *)&addr, &len);
+  int fd = co_await AcceptAwaiter{this};
+  // struct sockaddr_in addr {};
+  // socklen_t len = sizeof addr;
+  // int fd = ::accept(fd_, (struct sockaddr *)&addr, &len);
   if (fd != -1) {
     LOG_INFO("accept %d", fd);
   }
