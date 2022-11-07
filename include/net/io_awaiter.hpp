@@ -10,9 +10,9 @@
 namespace net {
 
 // example only
-class RecvAwaiter {
+class ReadAwaiter {
  public:
-  RecvAwaiter(Socket *socket, void *buffer, size_t len)
+  ReadAwaiter(Socket *socket, void *buffer, size_t len)
       : socket_(socket), buffer_(buffer), len_(len) {}
 
   // if IO is ready (recv_ > 0), then we should not suspend
@@ -43,9 +43,9 @@ class RecvAwaiter {
   size_t len_;
 };
 
-class SendAwaiter {
+class WriteAwaiter {
  public:
-  SendAwaiter(Socket *socket, void *buffer, size_t len)
+  WriteAwaiter(Socket *socket, void *buffer, size_t len)
       : socket_(socket), buffer_(buffer), len_(len) {}
 
   auto await_ready() -> bool {
@@ -100,7 +100,7 @@ class AcceptAwaiter {
       socklen_t len = sizeof addr;
       conn_fd_ = ::accept(socket_->GetFd(), (struct sockaddr *)&addr, &len);
     }
-    LOG_INFO("accept %d", conn_fd_);
+    LOG_DEBUG("accept %d", conn_fd_);
     return conn_fd_;
   }
 

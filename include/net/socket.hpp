@@ -10,8 +10,8 @@
 
 namespace net {
 
-class RecvAwaiter;
-class SendAwaiter;
+class ReadAwaiter;
+class WriteAwaiter;
 
 class Socket : noncopyable {
  public:
@@ -28,9 +28,9 @@ class Socket : noncopyable {
 
   auto accept() -> coro::Task<std::shared_ptr<Socket>>;
 
-  auto recv(void *buffer, std::size_t len) -> RecvAwaiter;
+  auto read(void *buffer, std::size_t len) -> ReadAwaiter;
 
-  auto send(void *buffer, std::size_t len) -> SendAwaiter;
+  auto write(void *buffer, std::size_t len) -> WriteAwaiter;
 
   auto GetEventManager() const -> EventManager & { return event_manager_; }
 

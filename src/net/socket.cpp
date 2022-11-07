@@ -60,16 +60,16 @@ auto Socket::accept() -> coro::Task<std::shared_ptr<Socket>> {
   // socklen_t len = sizeof addr;
   // int fd = ::accept(fd_, (struct sockaddr *)&addr, &len);
   if (fd != -1) {
-    LOG_INFO("accept %d", fd);
+    LOG_DEBUG("accept %d", fd);
   }
   co_return std::shared_ptr<Socket>(new Socket(fd, event_manager_));
 }
 
-auto Socket::recv(void *buffer, std::size_t len) -> RecvAwaiter {
+auto Socket::read(void *buffer, std::size_t len) -> ReadAwaiter {
   return {this, buffer, len};
 }
 
-auto Socket::send(void *buffer, std::size_t len) -> SendAwaiter {
+auto Socket::write(void *buffer, std::size_t len) -> WriteAwaiter {
   return {this, buffer, len};
 }
 

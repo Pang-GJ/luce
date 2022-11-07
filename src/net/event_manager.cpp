@@ -14,6 +14,7 @@ EventManager::EventManager(size_t init_size)
   }
 }
 
+// TODO(pgj): use a thread_pool or coroutine_pool???
 void EventManager::Start() {
   std::vector<struct epoll_event> events(init_size_);
 

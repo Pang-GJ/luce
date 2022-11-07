@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Options
 option(BUILD_TESTS "Build test executable" OFF)
 
-add_definitions(-DLUCEDEBUG)
+# add_definitions(-DLUCEDEBUG)
 
 # add ccache
 find_program(CCACHE_FOUND ccache)
