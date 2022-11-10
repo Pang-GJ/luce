@@ -15,6 +15,10 @@ template <typename T>
 class ValueReturner {
  public:
   void return_value(T &&value) { value_ = T(std::move(value)); }
+  void return_value(const T &value) { value_ = value; }
+
+  void set_value(T &&value) { value_ = T(std::move(value)); }
+  void set_value(const T &value) { value_ = value; }
 
   auto GetResult() -> T { return value_; }
   T value_;
@@ -71,14 +75,11 @@ struct Task {
       return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
     }
 
-    void unhandled_exception() {
-      LOG_FATAL("unhandled exception");
-    }
+    void unhandled_exception() { LOG_FATAL("unhandled exception"); }
 
     void SetDetachedTask(std::coroutine_handle<promise_type> handle) {
       this->release_detached_ = handle;
     }
-
   };
 
   struct TaskAwaiter {
@@ -87,7 +88,7 @@ struct Task {
 
     auto await_ready() -> bool { return handle_.done(); }
 
-    auto await_suspend(std::coroutine_handle<> continuation) noexcept {
+    void await_suspend(std::coroutine_handle<> continuation) noexcept {
       handle_.promise().continuation_ = continuation;
     }
 
@@ -103,6 +104,14 @@ struct Task {
   Task(Task &&other) noexcept
       : handle_(std::exchange(other.handle_, nullptr)),
         detached_(std::exchange(other.detached_, true)) {}
+
+  Task(const Task &other) noexcept
+      : handle_(other.handle_), detached_(other.detached_) {}
+
+  Task &operator=(const Task &other) noexcept {
+    handle_ = other.handle_;
+    detached_ = other.detached_;
+  }
 
   ~Task() {
     if (!detached_) {

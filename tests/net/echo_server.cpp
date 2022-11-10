@@ -3,7 +3,7 @@
 #include "net/io_awaiter.hpp"
 #include "net/socket.hpp"
 
-#include <csignal> // for ignore SIGPIPE
+#include <csignal>  // for ignore SIGPIPE
 #include <thread>
 
 coro::Task<bool> do_io(net::Socket &socket) {
@@ -48,12 +48,11 @@ coro::Task<> accept(net::Socket &listen_sock) {
 
 int main(int argc, char *argv[]) {
   signal(SIGPIPE, SIG_IGN);
-  
-  net::EventManager event_manager(1000);
+
+  net::EventManager event_manager(1000, 0);
   net::Socket listen_sock{"127.0.0.1", 10009, event_manager};
 
-  std::thread t1([&listen_sock]() { accept(listen_sock); });
+  std::jthread t1([&listen_sock]() { accept(listen_sock); });
 
   event_manager.Start();
-  t1.join();
 }
