@@ -7,32 +7,26 @@
 #include "common/noncopyable.h"
 #include "coro/task.hpp"
 #include "net/event_manager.hpp"
+#include "net/inet_address.hpp"
 
 namespace net {
 
-class ReadAwaiter;
-class WriteAwaiter;
-
 class Socket : noncopyable {
  public:
-  Socket(std::string_view ip, unsigned port, EventManager &event_manager);
-
-  Socket(Socket &&socket) noexcept
-      : fd_(socket.fd_),
-        io_state_(socket.io_state_),
-        event_manager_(socket.event_manager_) {
-    socket.fd_ = -1;
-  }
-
+  explicit Socket(int sock_fd = -1) : fd_(sock_fd) {}
   ~Socket();
 
-  auto accept() -> coro::Task<std::shared_ptr<Socket>>;
+  void BindAddress(const InetAddress &local_addr);
 
-  auto read(void *buffer, std::size_t len) -> ReadAwaiter;
+  void Listen();
 
-  auto write(void *buffer, std::size_t len) -> WriteAwaiter;
+  void ShutdownWrite();
 
-  auto GetEventManager() const -> EventManager & { return event_manager_; }
+  void SetTcpNoDelay(bool on);
+  void SetReuseAddr(bool on);
+  void SetReusePort(bool on);
+  void SetKeepAlive(bool on);
+  void SetNonblock();
 
   void SetIOState(unsigned int io_state) { io_state_ = io_state; }
 
@@ -47,11 +41,7 @@ class Socket : noncopyable {
   void EventDetach() { detached_ = true; }
 
  private:
-  explicit Socket(int fd, EventManager &event_manager);
-
- private:
-  EventManager &event_manager_;
-  int fd_{-1};
+  int fd_;
   unsigned int io_state_{0};  // for epoll
   bool detached_{true};
 };
