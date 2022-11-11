@@ -19,20 +19,23 @@ class EventManager {
 
   void Start();
 
-  void Attach(Socket *socket, std::coroutine_handle<> coro_handle,
+  void Attach(const std::shared_ptr<Socket> &socket,
+              std::coroutine_handle<> coro_handle,
               unsigned int events = EPOLLIN | EPOLLET);
 
-  void Detach(Socket *socket);
+  void Detach(const std::shared_ptr<Socket> &socket);
 
-  void AddRecv(Socket *socket, std::coroutine_handle<> recv_coro);
-  void DelRecv(Socket *socket);
+  void AddRecv(const std::shared_ptr<Socket> &socket,
+               std::coroutine_handle<> recv_coro);
+  void DelRecv(const std::shared_ptr<Socket> &socket);
 
-  void AddSend(Socket *socket, std::coroutine_handle<> send_coro);
-  void DelSend(Socket *socket);
+  void AddSend(const std::shared_ptr<Socket> &socket,
+               std::coroutine_handle<> send_coro);
+  void DelSend(const std::shared_ptr<Socket> &socket);
 
  private:
-  void UpdateEvent(Socket *socket, unsigned int new_state,
-                   std::coroutine_handle<> coro_handle);
+  void UpdateEvent(const std::shared_ptr<Socket> &socket,
+                   unsigned int new_state, std::coroutine_handle<> coro_handle);
 
   int epfd_;
   size_t init_size_;

@@ -14,7 +14,6 @@ EventManager::EventManager(size_t init_size)
   }
 }
 
-// TODO(pgj): use a thread_pool or coroutine_pool???
 void EventManager::Start() {
   std::vector<struct epoll_event> events(init_size_);
 
@@ -35,20 +34,21 @@ void EventManager::Start() {
       if ((events[i].events & EPOLLIN) != 0U) {
         auto coro_handle =
             std::coroutine_handle<>::from_address(events[i].data.ptr);
-        LOG_DEBUG("epoll_await resume in handle");
+        LOG_DEBUG("epoll_await resume recv handle");
         coro_handle.resume();
 
       } else if ((events[i].events & EPOLLOUT) != 0U) {
         auto coro_handle =
             std::coroutine_handle<>::from_address(events[i].data.ptr);
-        LOG_DEBUG("epoll_await resume out handle");
+        LOG_DEBUG("epoll_await resume send handle");
         coro_handle.resume();
       }
     }
   }
 }
 
-void EventManager::AddRecv(Socket *socket, std::coroutine_handle<> recv_coro) {
+void EventManager::AddRecv(const std::shared_ptr<Socket> &socket,
+                           std::coroutine_handle<> recv_coro) {
   if (!socket->Attached()) {
     // 如果没有attach，先attach
     auto events = EPOLLIN | EPOLLET;
@@ -59,13 +59,14 @@ void EventManager::AddRecv(Socket *socket, std::coroutine_handle<> recv_coro) {
   UpdateEvent(socket, new_state, recv_coro);
 }
 
-void EventManager::DelRecv(Socket *socket) {
+void EventManager::DelRecv(const std::shared_ptr<Socket> &socket) {
   auto new_state = socket->GetIOState() & ~EPOLLIN;
   socket->SetIOState(new_state);
   UpdateEvent(socket, new_state, std::noop_coroutine());
 }
 
-void EventManager::AddSend(Socket *socket, std::coroutine_handle<> send_coro) {
+void EventManager::AddSend(const std::shared_ptr<Socket> &socket,
+                           std::coroutine_handle<> send_coro) {
   if (!socket->Attached()) {
     auto events = EPOLLOUT | EPOLLET;
     Attach(socket, send_coro, events);
@@ -76,13 +77,14 @@ void EventManager::AddSend(Socket *socket, std::coroutine_handle<> send_coro) {
   UpdateEvent(socket, new_state, send_coro);
 }
 
-void EventManager::DelSend(Socket *socket) {
+void EventManager::DelSend(const std::shared_ptr<Socket> &socket) {
   auto new_state = socket->GetIOState() & ~EPOLLOUT;
   socket->SetIOState(new_state);
   UpdateEvent(socket, new_state, std::noop_coroutine());
 }
 
-void EventManager::Attach(Socket *socket, std::coroutine_handle<> coro_handle,
+void EventManager::Attach(const std::shared_ptr<Socket> &socket,
+                          std::coroutine_handle<> coro_handle,
                           unsigned int events) {
   struct epoll_event ev {};
   socket->SetIOState(events);
@@ -93,14 +95,15 @@ void EventManager::Attach(Socket *socket, std::coroutine_handle<> coro_handle,
     LOG_FATAL("epoll_ctl_add: add attach error!\n");
   }
 }
-void EventManager::Detach(Socket *socket) {
+void EventManager::Detach(const std::shared_ptr<Socket> &socket) {
   socket->EventDetach();
   if (epoll_ctl(epfd_, EPOLL_CTL_DEL, socket->GetFd(), nullptr) == -1) {
     LOG_FATAL("epoll_ctl_del: detach error!");
   }
 }
 
-void EventManager::UpdateEvent(Socket *socket, unsigned int new_state,
+void EventManager::UpdateEvent(const std::shared_ptr<Socket> &socket,
+                               unsigned int new_state,
                                std::coroutine_handle<> coro_handle) {
   struct epoll_event ev {};
   ev.events = new_state;
