@@ -95,7 +95,11 @@ class ThreadPool {
   size_t FreeSize() { return free_thread_num_; }
 
   // 线程数量
-  size_t Size() { return workers_.size(); }
+  size_t Size() {
+    std::lock_guard<std::mutex> lock(grow_mtx_);
+    auto sz = workers_.size();
+    return sz;
+  }
 
  private:
   void work() {
@@ -104,7 +108,9 @@ class ThreadPool {
       TaskType task;
       {
         std::unique_lock<std::mutex> lock(mtx_);
-        tasks_cv_.wait(lock, [this]() { return this->is_shutdown_ || !this->tasks_.empty(); });
+        tasks_cv_.wait(lock, [this]() {
+          return this->is_shutdown_ || !this->tasks_.empty();
+        });
 
         if (is_shutdown_ && tasks_.empty()) {
           // is_shutdown_ 并且任务为空了之后才可以结束

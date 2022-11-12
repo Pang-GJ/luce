@@ -6,13 +6,14 @@ int main(int argc, char *argv[]) {
   ThreadPool pool(4, true);
 
   // enqueue and store future
-  for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
+  for (int i = 0; i < 100; ++i) {
     auto result = pool.Commit(
         [](int answer) {
-          std::cout << "this thread id: " << std::this_thread::get_id()
+          // TODO(pgj): use log
+          std::cerr << "this thread id: " << std::this_thread::get_id()
                     << ", answer: " << answer << std::endl;
         },
-        42);
+        i);
   }
 
   return 0;
