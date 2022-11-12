@@ -3,8 +3,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "net/tcp_connection.hpp"
 #include "coro/task.hpp"
+#include "net/tcp_connection.hpp"
 
 namespace net {
 
@@ -12,19 +12,20 @@ class Socket;
 class TcpServer;
 
 class TcpApplication {
-  public:
-    TcpApplication() = default;
-    
-    void HandleOpen(TcpConnectionPtr conn);
-    void HandleData(TcpConnectionPtr conn, TcpServer &server);
-    void HandleClose(TcpConnectionPtr conn);
+ public:
+  TcpApplication() = default;
 
-  protected: 
-    virtual coro::Task<void> OnData(TcpConnectionPtr conn, TcpServer &server) = 0;
-    virtual coro::Task<void> OnOpen(TcpConnectionPtr conn) = 0;
-    virtual coro::Task<void> OnClose(TcpConnectionPtr conn) = 0;
+  coro::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer &server);
+  //    void HandleData(TcpConnectionPtr conn, TcpServer &server);
+  //    void HandleClose(TcpConnectionPtr conn);
 
-private:
+ protected:
+  virtual coro::Task<> OnRequest(TcpConnectionPtr conn,
+                                     TcpServer &server) = 0;
+  virtual coro::Task<> OnOpen(TcpConnectionPtr conn) = 0;
+  virtual coro::Task<> OnClose(TcpConnectionPtr conn) = 0;
+
+ private:
   std::mutex mtx_;
   std::unordered_map<int, TcpConnectionWeakPtr> conn_map_;
 };
