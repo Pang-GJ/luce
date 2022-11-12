@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
-#include <fcntl.h>
 
 #include "common/logger.hpp"
 #include "net/event_manager.hpp"
@@ -11,12 +11,12 @@ namespace net {
 
 Socket::~Socket() {
   if (fd_ != -1) {
-    LOG_DEBUG("close fd = %d\n", fd_);
+    LOG_INFO("close fd = %d\n", fd_);
     ::close(fd_);
   }
 }
 void Socket::BindAddress(const InetAddress &local_addr) {
-  int ret = ::bind(fd_, local_addr.GetSockAddr(), sizeof (struct sockaddr_in));
+  int ret = ::bind(fd_, local_addr.GetSockAddr(), sizeof(struct sockaddr_in));
   if (ret != 0) {
     LOG_FATAL("bind sockfd: %d failed", fd_);
   }
