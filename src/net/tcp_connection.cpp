@@ -1,6 +1,3 @@
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <sys/socket.h>
 #include <charconv>
 #include <cstring>
 #include <utility>
@@ -8,7 +5,6 @@
 #include "common/logger.hpp"
 #include "io/io_awaiter.hpp"
 #include "net/event_manager.hpp"
-// #include "net/socket.hpp"
 #include "net/tcp_connection.hpp"
 
 namespace net {

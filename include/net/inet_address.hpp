@@ -19,7 +19,7 @@ class InetAddress {
 
   void SetSockAddr(const sockaddr_in &addr) { addr_ = addr; }
 
-  sockaddr *GetSockAddr() const { return (sockaddr *)&addr_; }
+  struct sockaddr *GetSockAddr() const { return (struct sockaddr *)&addr_; }
 
  private:
   sockaddr_in addr_{};

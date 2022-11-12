@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include "io/io_awaiter.hpp"
 #include "net/socket.hpp"
 
 namespace net {
