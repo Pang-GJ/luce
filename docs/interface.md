@@ -2,7 +2,7 @@
 
 ## 协程网络库应用层接口
 ```cpp
-void OnData(TcpConnectoin *conn) {
+void OnRequest(TcpConnectoin *conn, TcpServer &server) {
   char buf[1024]; 
   co_await conn->recv(&buf);
   
