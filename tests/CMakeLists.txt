@@ -39,8 +39,8 @@ set_target_properties(test_coroutine PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJE
 target_compile_features(test_coroutine PRIVATE cxx_std_20)
 target_link_libraries(test_coroutine PRIVATE ${LIBRARY_NAME} doctest::doctest fmt::fmt)
 
-add_executable(echo_server ./net/echo_server.cpp)
-set_target_properties(echo_server PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-target_compile_features(echo_server PRIVATE cxx_std_20)
-target_link_libraries(echo_server PRIVATE ${LIBRARY_NAME} doctest::doctest fmt::fmt)
+add_executable(echo_server2 ./net/echo_server2.cpp)
+set_target_properties(echo_server2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+target_compile_features(echo_server2 PRIVATE cxx_std_20)
+target_link_libraries(echo_server2 PRIVATE ${LIBRARY_NAME} doctest::doctest fmt::fmt)
 
