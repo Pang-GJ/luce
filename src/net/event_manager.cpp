@@ -1,4 +1,6 @@
 #include <sys/epoll.h>
+#include <cerrno>
+#include <cstring>
 #include <vector>
 
 #include "common/logger.hpp"
@@ -8,38 +10,44 @@
 namespace net {
 
 EventManager::EventManager(size_t init_size)
-    : epfd_(epoll_create1(EPOLL_CLOEXEC)), init_size_(init_size) {
+    : epfd_(epoll_create1(EPOLL_CLOEXEC)), events_(init_size) {
   if (epfd_ == -1) {
     LOG_FATAL("epoll_create1 error");
   }
 }
 
 void EventManager::Start() {
-  std::vector<struct epoll_event> events(init_size_);
 
   while (true) {
+    if (is_shutdown_) {
+      break;
+    }
     LOG_DEBUG("epoll_wait");
-    int event_num = epoll_wait(epfd_, &*events.begin(),
-                               static_cast<int>(events.size()), -1);
+    int event_num = epoll_wait(epfd_, &*events_.begin(),
+                               static_cast<int>(events_.size()), -1);
     if (event_num == -1) {
+      if (errno == EINTR) {
+        continue;
+      }
+      LOG_ERROR("epoll_wait error, info: %s", strerror(errno));
       LOG_FATAL("epoll_wait error");
     }
 
-    if (event_num == static_cast<int>(events.size())) {
-      events.resize(events.size() * 2);
+    if (event_num == static_cast<int>(events_.size())) {
+      events_.resize(events_.size() * 2);
     }
 
     for (int i = 0; i < event_num; ++i) {
       // TODO(pgj): check more situation
-      if ((events[i].events & EPOLLIN) != 0U) {
+      if ((events_[i].events & EPOLLIN) != 0U) {
         auto coro_handle =
-            std::coroutine_handle<>::from_address(events[i].data.ptr);
+            std::coroutine_handle<>::from_address(events_[i].data.ptr);
         LOG_DEBUG("epoll_await resume recv handle");
         coro_handle.resume();
 
-      } else if ((events[i].events & EPOLLOUT) != 0U) {
+      } else if ((events_[i].events & EPOLLOUT) != 0U) {
         auto coro_handle =
-            std::coroutine_handle<>::from_address(events[i].data.ptr);
+            std::coroutine_handle<>::from_address(events_[i].data.ptr);
         LOG_DEBUG("epoll_await resume send handle");
         coro_handle.resume();
       }

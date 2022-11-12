@@ -2,6 +2,7 @@
 
 #include <sys/epoll.h>
 #include <cstddef>
+#include <vector>
 
 #include "common/singleton.hpp"
 #include "coro/task.hpp"
@@ -33,12 +34,15 @@ class EventManager {
                std::coroutine_handle<> send_coro);
   void DelSend(const std::shared_ptr<Socket> &socket);
 
+  void Shutdown() { is_shutdown_ = true; }
+
  private:
   void UpdateEvent(const std::shared_ptr<Socket> &socket,
                    unsigned int new_state, std::coroutine_handle<> coro_handle);
 
   int epfd_;
-  size_t init_size_;
+  bool is_shutdown_{false};
+  std::vector<struct epoll_event> events_;
 };
 
 }  // namespace net
