@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <queue>
 
 #include "common/logger.hpp"
@@ -11,17 +12,19 @@ class BlockingQueue {
  public:
   void push(const T &value) {
     std::lock_guard<std::mutex> lock(mtx_);
-    if (closed_) {
-      LOG_ERROR("queue have been closed.");
-    }
+
     queue_.push(value);
     cv_.notify_one();
   }
 
-  auto pop() -> T {
+  auto pop() -> std::optional<T> {
     std::unique_lock<std::mutex> lock(mtx_);
-    cv_.wait(lock, [this]() { return !queue_.empty() || closed_; });
+    cv_.wait(lock,
+             [this]() { return this->closed_.test() || !queue_.empty(); });
 
+    if (closed_.test()) {
+      return {};
+    }
     if (queue_.empty()) {
       LOG_ERROR("queue empty");
     }
@@ -33,15 +36,18 @@ class BlockingQueue {
 
   auto size() { return queue_.size(); }
 
-  void close() {
+  auto destroy() -> std::queue<T> & {
     std::lock_guard<std::mutex> lock(mtx_);
-    closed_ = true;
+    closed_.test_and_set();
     cv_.notify_all();
+
+    return queue_;
   }
 
  private:
   std::mutex mtx_;
   std::condition_variable cv_;
   std::queue<T> queue_;
-  bool closed_{false};
+
+  std::atomic_flag closed_;
 };
