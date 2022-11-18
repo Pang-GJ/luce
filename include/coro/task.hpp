@@ -17,6 +17,16 @@ class ValueReturner {
   void return_value(T &&value) { value_ = T(std::move(value)); }
   void return_value(const T &value) { value_ = value; }
 
+  std::suspend_always yield_value(T &&value) {
+    value_ = T(std::move(value));
+    return {};
+  }
+
+  std::suspend_always yield_value(const T &value) {
+    value_ = value;
+    return {};
+  }
+
   void set_value(T &&value) { value_ = T(std::move(value)); }
   void set_value(const T &value) { value_ = value; }
 
