@@ -10,10 +10,12 @@ ps: “高性能”是指单看echo_server，性能跟`muduo`接近，没有进�
 - IO多路复用（epoll）+ MultiReactor
 - C++20协程支持 co_await/co_return
     - 简单使用coro::Task<>即可令函数成为协程
-- 线程池
+- 动态线程池
 - EventManager
-- Basic Log
-- json解析（未合并）
+- [高性能异步日志](https://github.com/Pang-GJ/plog)
+  - 没有合并异步日志，仍在开发中，计划封装一下`fmt`或者`std::format`TODO
+- [json解析](https://github.com/Pang-GJ/tinyjson)
+  - 为什么需要json解析：后期考虑基于本仓库开发类似`gin`的简易版框架
 
 ## 用法
 
@@ -45,8 +47,9 @@ Reactor
     - 目前的协程使用感觉还不是很容易
     - 缺少了不少组件，例如调度器、同步原语
 - io_uring
-- Async Log
 - HTTP封装
+  - 实现类似`gin`的简易HTTP框架
 - 简单protobuf RPC实现
     - 更进一步可以使用自己实现的序列化
+    - TODO: 不用写`IDL`的RPC
 - Zero Copy
