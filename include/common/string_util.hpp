@@ -96,7 +96,8 @@ std::string_view Trim(std::string_view str) {
 }
 
 std::vector<std::string_view> Split(std::string_view str,
-                                    std::string_view delim, bool keep_empty) {
+                                    std::string_view delim,
+                                    bool keep_empty = true) {
   std::vector<std::string_view> result;
   if (str.empty()) {
     return result;
@@ -122,6 +123,20 @@ std::vector<std::string_view> Split(std::string_view str,
 }
 
 std::vector<std::string_view> Split(std::string_view str, char delim,
-                                    bool keep_empty) {
+                                    bool keep_empty = true) {
   return Split(str, std::string_view(&delim, 1), keep_empty);
+}
+
+bool Contains(std::string_view str, std::string_view target) {
+  if (str == target) {
+    return true;
+  }
+  if (str.empty()) {
+    return false;
+  }
+  if (target.empty()) {
+    return true;
+  }
+  auto pos = str.find(target);
+  return pos != std::string_view::npos;
 }
