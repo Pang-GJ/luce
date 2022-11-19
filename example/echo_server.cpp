@@ -3,8 +3,7 @@
 #include "common/logger.hpp"
 #include "common/thread_pool.hpp"
 #include "io/io_awaiter.hpp"
-#include "net/tcp_application.hpp"
-#include "net/tcp_server.hpp"
+#include "net/tcp_all.hpp"
 
 class EchoServer : public net::TcpApplication {
  private:

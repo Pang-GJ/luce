@@ -1,8 +1,8 @@
 #pragma once
 
 #include "net/event_manager.hpp"
-#include "net/tcp_connection.hpp"
-#include "net/tcp_server.hpp"
+#include "net/tcp/tcp_connection.hpp"
+#include "net/tcp/tcp_server.hpp"
 
 namespace net {
 

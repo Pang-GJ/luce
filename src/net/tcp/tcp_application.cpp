@@ -1,7 +1,7 @@
-#include "net/tcp_application.hpp"
+#include "net/tcp/tcp_application.hpp"
 #include "common/logger.hpp"
-#include "net/tcp_connection.hpp"
-#include "net/tcp_server.hpp"
+#include "net/tcp/tcp_connection.hpp"
+#include "net/tcp/tcp_server.hpp"
 
 namespace net {
 

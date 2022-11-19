@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "coro/task.hpp"
-#include "net/tcp_connection.hpp"
+#include "net/tcp/tcp_connection.hpp"
 
 namespace net {
 

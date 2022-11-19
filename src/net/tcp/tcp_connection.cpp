@@ -5,7 +5,7 @@
 #include "common/logger.hpp"
 #include "io/io_awaiter.hpp"
 #include "net/event_manager.hpp"
-#include "net/tcp_connection.hpp"
+#include "net/tcp/tcp_connection.hpp"
 
 namespace net {
 

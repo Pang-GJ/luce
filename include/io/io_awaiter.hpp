@@ -7,8 +7,8 @@
 #include "common/logger.hpp"
 #include "net/event_manager.hpp"
 #include "net/socket.hpp"
-#include "net/tcp_acceptor.hpp"
-#include "net/tcp_connection.hpp"
+#include "net/tcp/tcp_acceptor.hpp"
+#include "net/tcp/tcp_connection.hpp"
 
 namespace net {
 

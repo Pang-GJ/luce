@@ -1,5 +1,5 @@
-#include "net/tcp_server.hpp"
-#include "net/tcp_acceptor.hpp"
+#include "net/tcp/tcp_server.hpp"
+#include "net/tcp/tcp_acceptor.hpp"
 
 namespace net {
 
