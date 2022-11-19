@@ -11,7 +11,7 @@ namespace net {
 
 Socket::~Socket() {
   if (fd_ != -1) {
-    LOG_INFO("close fd = %d\n", fd_);
+    LOG_INFO("close fd = %d", fd_);
     ::close(fd_);
   }
 }
