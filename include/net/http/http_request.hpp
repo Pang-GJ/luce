@@ -1,0 +1,37 @@
+#pragma once
+
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
+
+#include "common/noncopyable.h"
+
+namespace net::http {
+
+struct HttpRequest : noncopyable {
+  void Parse(std::string_view data);
+
+  // 最大请求报文大小限制
+  // static const int MAX_REQUEST_SIZE{1024 * 1024 * 10};
+
+  std::string method_;        // GET or POST
+  std::string url_;           // eg: /foo?name=pgj
+  std::string uri_;           // eg: /foo
+  std::string http_version_;  // 1.1 or 1.0
+  std::string body_;
+  std::unordered_map<std::string, std::string> headers_;
+  std::unordered_map<std::string, std::string> url_params_;
+  std::unordered_map<std::string, std::string> body_params_;
+
+ private:
+  // 解析请求头
+  void ParseHeaders(std::vector<std::string_view> &headers);
+  // 解析请求行
+  void ParseLine(std::string_view line);
+  // 解析请求行中的URL
+  void ParseURLParams(std::string_view url);
+};
+
+}  // namespace net::http
