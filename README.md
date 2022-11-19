@@ -5,17 +5,22 @@
 ps: “高性能”是指单看echo_server，性能跟`muduo`接近，没有进行更多的性能测试。  
 同时`muduo`有很多内部的优化技巧，本项目暂未优化一些内部实现，所以有不少的提升空间。
 
+### 期望
+C++20带来了无栈协程，但是不方便普通用户使用，目前的标准库适合库作者使用。  
+我想慢慢地封装一层协程异步框架，计划参考`rust`中的实现。
+
 ## 目前已实现的部分
 
 - IO多路复用（epoll）+ MultiReactor
 - C++20协程支持 co_await/co_return
     - 简单使用coro::Task<>即可令函数成为协程
 - 动态线程池
-- EventManager
+- EventManager/Reactor
+- TcpServer/TcpAcceptor/TcpConnection/TcpApplication
 - [高性能异步日志](https://github.com/Pang-GJ/plog)
   - 没有合并异步日志，仍在开发中，计划封装一下`fmt`或者`std::format`TODO
 - [json解析](https://github.com/Pang-GJ/tinyjson)
-  - 为什么需要json解析：后期考虑基于本仓库开发类似`gin`的简易版框架
+  - 为什么需要json解析：后期考虑基于本仓库开发类似`gin`的简易版HTTP框架
 
 ## 用法
 
