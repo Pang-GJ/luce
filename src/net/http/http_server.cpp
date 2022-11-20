@@ -42,6 +42,8 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
     }
 
     http_request->Debug();
+    LOG_INFO("got a %s request on %s", http_request->method_.c_str(),
+             http_request->url_.c_str());
 
     HandleType handler;
     bool ok = false;
@@ -68,6 +70,14 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
     co_await SendResponse(http_response, conn);
 
     // TODO(pgj): check keep alive
+    //    if (http_request->headers_.contains("Connection")) {
+    //      LOG_INFO("Connection: %s",
+    //      http_request->headers_["Connection"].c_str()); if
+    //      (http_request->headers_["Connection"] == "close") {
+    //        break;
+    //      }
+    //    }
+    break;
   }
   co_return;
 }

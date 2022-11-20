@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/logger.hpp"
+#include "common/string_util.hpp"
 #include "coro/task.hpp"
 #include "net/http/http_request.hpp"
 #include "net/http/http_response.hpp"
@@ -25,8 +26,33 @@ class HttpServer : public TcpApplication {
  public:
   void RegisterHandle(std::string_view method, std::string_view url,
                       const HandleType &handler) {
+    if (method == "DELETE") {
+      LOG_ERROR("could not DELETE now");
+      return;
+    }
+    if (!EndsWith(url, "/")) {
+      LOG_ERROR("register handler for %s: %s failed, url must ends with '/'",
+                method.data(), url.data());
+      return;
+    }
     methods_[std::string(url)].emplace_back(
         MethodType{.method_ = std::string(method), .handler_ = handler});
+  }
+
+  void GET(std::string_view url, const HandleType &handler) {
+    RegisterHandle("GET", url, handler);
+  }
+
+  void POST(std::string_view url, const HandleType &handler) {
+    RegisterHandle("POST", url, handler);
+  }
+
+  void PUT(std::string_view url, const HandleType &handler) {
+    RegisterHandle("PUT", url, handler);
+  }
+
+  void DELETE(std::string_view url, const HandleType &handler) {
+    RegisterHandle("DELETE", url, handler);
   }
 
   void SetStaticPath(std::string_view path) {

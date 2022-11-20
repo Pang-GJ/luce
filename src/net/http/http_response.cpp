@@ -12,6 +12,7 @@ void HttpResponse::SetBody(std::string_view body) {
   }
   buffer_ += "\r\n";
   buffer_ += body;
+  buffer_ += "\r\n";
 }
 
 // HTTP状态码解释出处：https://www.runoob.com/http/http-status-codes.html
