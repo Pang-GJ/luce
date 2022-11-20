@@ -45,5 +45,5 @@ bool Contains(std::string_view str, std::string_view target);
 // use fmtlib instead
 template <typename... Args>
 std::string Format(std::string_view fmt, Args &&...args) {
-  return fmt::format(fmt, std::forward<Args>(args...)...);
+  return fmt::format(fmt, std::forward<Args>(args)...);
 }
