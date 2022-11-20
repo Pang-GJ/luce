@@ -10,6 +10,8 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/core.h>
+
 std::string Join(const std::vector<std::string_view> &parts,
                  std::string_view delim);
 
@@ -38,3 +40,10 @@ std::vector<std::string_view> Split(std::string_view str, char delim,
                                     bool keep_empty = true);
 
 bool Contains(std::string_view str, std::string_view target);
+
+// std::format in linux could not use now
+// use fmtlib instead
+template <typename... Args>
+std::string Format(std::string_view fmt, Args &&...args) {
+  return fmt::format(fmt, std::forward<Args>(args...)...);
+}
