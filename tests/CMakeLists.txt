@@ -44,3 +44,8 @@ set_target_properties(echo_server2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT
 target_compile_features(echo_server2 PRIVATE cxx_std_20)
 target_link_libraries(echo_server2 PRIVATE ${LIBRARY_NAME} doctest::doctest fmt::fmt)
 
+add_executable(test_http ./net/test_http.cpp)
+set_target_properties(test_http PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+target_compile_features(test_http PRIVATE cxx_std_20)
+target_link_libraries(test_http PRIVATE ${LIBRARY_NAME} doctest::doctest fmt::fmt)
+
