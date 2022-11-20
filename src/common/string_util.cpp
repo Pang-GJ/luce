@@ -17,7 +17,7 @@ void JoinImpl(const T &parts, std::string_view delim, std::string *result) {
     if (it != parts.begin()) {
       result->append(delim.begin(), delim.end());
     }
-    result->append(delim.begin(), delim.end());
+    result->append(it->begin(), it->end());
   }
 }
 
@@ -86,8 +86,7 @@ std::string_view Trim(std::string_view str) {
 }
 
 std::vector<std::string_view> Split(std::string_view str,
-                                    std::string_view delim,
-                                    bool keep_empty) {
+                                    std::string_view delim, bool keep_empty) {
   std::vector<std::string_view> result;
   if (str.empty()) {
     return result;

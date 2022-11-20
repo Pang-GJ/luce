@@ -44,6 +44,6 @@ bool Contains(std::string_view str, std::string_view target);
 // std::format in linux could not use now
 // use fmtlib instead
 template <typename... Args>
-std::string Format(std::string_view fmt, Args &&...args) {
-  return fmt::format(fmt, std::forward<Args>(args)...);
+std::string Format(std::string_view real_time_fmt, Args &&...args) {
+  return fmt::vformat(real_time_fmt, fmt::make_format_args(args...));
 }
