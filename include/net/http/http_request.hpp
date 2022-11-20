@@ -10,8 +10,8 @@
 
 namespace net::http {
 
-// 最大请求报文大小限制
-#define MAX_REQUEST_SIZE (1024 * 1024 * 10)
+// 单次最大请求报文大小限制 64K
+#define MAX_REQUEST_SIZE (1024 * 64)
 
 struct HttpRequest : noncopyable {
   void Parse(std::string_view data);
@@ -34,6 +34,8 @@ struct HttpRequest : noncopyable {
   void ParseLine(std::string_view line);
   // 解析请求行中的URL
   void ParseURLParams(std::string_view url);
+  // 简单的解析请求体
+  void ParseBody(std::string_view body);
 };
 
 }  // namespace net::http
