@@ -5,6 +5,8 @@
 #include "coro/task.hpp"
 #include "net/http/http_request.hpp"
 #include "net/http/http_response.hpp"
+#include "net/http/http_context.hpp"
+#include "net/http/http_router.hpp"
 #include "net/tcp_all.hpp"
 
 #include <list>
@@ -13,46 +15,23 @@
 
 namespace net::http {
 
-using RequestPtr = std::shared_ptr<HttpRequest>;
-using ResponsePtr = std::shared_ptr<HttpResponse>;
-using HandleType = std::function<void(RequestPtr, ResponsePtr)>;
 
 class HttpServer : public TcpApplication {
-  struct MethodType {
-    std::string method_;
-    HandleType handler_;
-  };
-
  public:
-  void RegisterHandle(std::string_view method, std::string_view url,
-                      const HandleType &handler) {
-    if (method == "DELETE") {
-      LOG_ERROR("could not DELETE now");
-      return;
-    }
-    if (!EndsWith(url, "/")) {
-      LOG_ERROR("register handler for %s: %s failed, url must ends with '/'",
-                method.data(), url.data());
-      return;
-    }
-    methods_[std::string(url)].emplace_back(
-        MethodType{.method_ = std::string(method), .handler_ = handler});
+  void GET(std::string_view url, const HandleFunc &handler) {
+    router_.AddRouter("GET", url, handler);
   }
 
-  void GET(std::string_view url, const HandleType &handler) {
-    RegisterHandle("GET", url, handler);
+  void POST(std::string_view url, const HandleFunc &handler) {
+    router_.AddRouter("POST", url, handler);
   }
 
-  void POST(std::string_view url, const HandleType &handler) {
-    RegisterHandle("POST", url, handler);
+  void PUT(std::string_view url, const HandleFunc &handler) {
+    router_.AddRouter("PUT", url, handler);
   }
 
-  void PUT(std::string_view url, const HandleType &handler) {
-    RegisterHandle("PUT", url, handler);
-  }
-
-  void DELETE(std::string_view url, const HandleType &handler) {
-    RegisterHandle("DELETE", url, handler);
+  void DELETE(std::string_view url, const HandleFunc &handler) {
+    router_.AddRouter("DELETE", url, handler);
   }
 
   void SetStaticPath(std::string_view path) {
@@ -74,12 +53,14 @@ class HttpServer : public TcpApplication {
 
   coro::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override;
 
+  coro::Task<> ServerHTTP(TcpConnectionPtr conn, RequestPtr http_request,
+                          ResponsePtr http_response);
+
   coro::Task<> SendFile(std::string_view path, RequestPtr request,
                         ResponsePtr response, TcpConnectionPtr conn);
   coro::Task<> SendResponse(ResponsePtr response, TcpConnectionPtr conn);
 
-  std::unordered_map<std::string, std::list<MethodType>>
-      methods_;  // path -> handle
+  Router router_;  // method-url -> handle
   std::string static_path_;
   // std::string start_path_; // 程序启动的路径
 };

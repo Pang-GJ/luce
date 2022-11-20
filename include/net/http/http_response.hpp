@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -35,5 +36,7 @@ class HttpResponse {
   std::unordered_map<std::string, std::string> headers_;
   // bool finish_{false};  // 相应数据是否完成
 };
+
+using ResponsePtr = std::shared_ptr<HttpResponse>;
 
 }  // namespace net::http

@@ -29,7 +29,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
 
     // 是否未读完
     if (http_request->headers_.contains("Content-Length")) {
-      auto content_len = atol(http_request->headers_["Content-Length"].c_str());
+      auto content_len = std::stoi(http_request->headers_["Content-Length"]);
       while (http_request->body_.size() != content_len) {
         bzero(&buffer, sizeof buffer);
         recv_len = co_await conn->read(&buffer, sizeof buffer);
@@ -45,29 +45,11 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
     LOG_INFO("got a %s request on %s", http_request->method_.c_str(),
              http_request->url_.c_str());
 
-    HandleType handler;
-    bool ok = false;
-    if (methods_.contains(http_request->url_)) {
-      for (const auto &it : methods_[http_request->url_]) {
-        if (it.method_ == http_request->method_) {
-          handler = it.handler_;
-          ok = true;
-        }
-      }
-    }
-
     auto http_response = std::make_shared<HttpResponse>();
     http_response->SetHTTPVersion(http_request->http_version_);
-    if (ok) {
-      handler(http_request, http_response);
-    } else {
-      http_response->SetHeader("Content-Type", "text/html");
-      http_response->SetStatusCode(404);
-      http_response->SetBody("Not Found");
-    }
 
-    LOG_INFO("debug -> HTTP Response: %s", http_response->GetData().c_str());
-    co_await SendResponse(http_response, conn);
+    // 运行Router回调
+    co_await ServerHTTP(conn, http_request, http_response);
 
     // TODO(pgj): check keep alive
     //    if (http_request->headers_.contains("Connection")) {
@@ -124,6 +106,14 @@ coro::Task<> HttpServer::SendResponse(ResponsePtr response,
     send_size += res;
   }
   response->Clear();
+}
+
+coro::Task<> HttpServer::ServerHTTP(TcpConnectionPtr conn,
+                                    RequestPtr http_request,
+                                    ResponsePtr http_response) {
+  router_.Handle(std::make_shared<HttpContext>(http_request, http_response));
+  LOG_INFO("debug -> HTTP Response: %s", http_response->GetData().c_str());
+  co_await SendResponse(http_response, conn);
 }
 
 }  // namespace net::http

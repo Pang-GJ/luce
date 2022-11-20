@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -37,5 +38,7 @@ struct HttpRequest : noncopyable {
   // 简单的解析请求体
   void ParseBody(std::string_view body);
 };
+
+using RequestPtr = std::shared_ptr<HttpRequest>;
 
 }  // namespace net::http
