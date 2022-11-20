@@ -20,7 +20,7 @@ C++20带来了无栈协程，但是不方便普通用户使用，目前的标准
 - [高性能异步日志](https://github.com/Pang-GJ/plog)
   - 没有合并异步日志，仍在开发中，计划封装一下`fmt`或者`std::format`TODO
 - [json解析](https://github.com/Pang-GJ/tinyjson)
-  - 为什么需要json解析：后期考虑基于本仓库开发类似`gin`的简易版HTTP框架
+- [类似`gin`的restful HTTP框架](./docs/http.md)
 
 ## 用法
 
