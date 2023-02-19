@@ -9,6 +9,10 @@ int main(int argc, char *argv[]) {
   net::InetAddress addr{12345};
   net::http::HttpServer http_app;
 
+  http_app.GET("/ping/", [](const net::http::ContextPtr &ctx) {
+    ctx->HTML(200, "Pong");
+  });
+
   http_app.POST("/add/", [](const net::http::ContextPtr &ctx) {
     LOG_INFO("POST run: %s", ctx->req_->body_.c_str());
 

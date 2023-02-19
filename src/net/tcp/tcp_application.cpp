@@ -8,14 +8,15 @@ namespace net {
 coro::Task<> TcpApplication::HandleRequest(TcpConnectionPtr conn,
                                            TcpServer &server) {
   {
-    std::lock_guard<std::mutex> lock(mtx_);
+    // 这里HandleRequest只被AcceptLoop调用，所以不会存在锁竞争
+    // std::lock_guard<std::mutex> lock(mtx_);
     conn_map_[conn->GetSocket()->GetFd()] = conn;
   }
   OnOpen(conn);
   co_await OnRequest(conn, server);
   co_await OnClose(conn);
   {
-    std::lock_guard<std::mutex> lock(mtx_);
+    // std::lock_guard<std::mutex> lock(mtx_);
     conn_map_.erase(conn->GetSocket()->GetFd());
   }
 }
