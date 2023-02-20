@@ -80,3 +80,7 @@ tmp
 
 # public/index.html for httpd
 public/
+
+# xmake
+.xmake/
+compile_commands.json

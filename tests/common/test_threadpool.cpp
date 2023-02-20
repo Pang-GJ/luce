@@ -1,5 +1,5 @@
 #include <iostream>
-#include "common/thread_pool.hpp"
+#include "luce/common/thread_pool.hpp"
 
 int main(int argc, char *argv[]) {
   // create thread pool with 4 worker threads

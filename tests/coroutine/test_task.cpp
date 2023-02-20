@@ -2,7 +2,7 @@
 #include <fmt/core.h>
 #include <iostream>
 #include <thread>
-#include "coro/task.hpp"
+#include "luce/coro/task.hpp"
 
 coro::Task<int> simple_task2() {
   fmt::print("task 2 start...\n");

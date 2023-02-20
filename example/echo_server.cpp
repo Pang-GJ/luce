@@ -1,9 +1,9 @@
 // same as tests/net/echo_server2.cpp
 
-#include "common/logger.hpp"
-#include "common/thread_pool.hpp"
-#include "io/io_awaiter.hpp"
-#include "net/tcp_all.hpp"
+#include "luce/common/logger.hpp"
+#include "luce/common/thread_pool.hpp"
+#include "luce/io/io_awaiter.hpp"
+#include "luce/net/tcp_all.hpp"
 
 class EchoServer : public net::TcpApplication {
  private:

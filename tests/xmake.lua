@@ -1,0 +1,26 @@
+add_requires("doctest")
+add_requires("fmt", {system = false, version = "9.1.0"})
+
+target("test_threadpool")
+    set_kind("binary")
+    add_files("$(projectdir)/tests/common/test_threadpool.cpp")
+    add_deps("luce")
+    add_packages("fmt")
+
+target("test_task")
+    set_kind("binary")
+    add_files("$(projectdir)/tests/coroutine/test_task.cpp")
+    add_deps("luce")
+    add_packages("fmt")
+
+target("echo_server2")
+    set_kind("binary")
+    add_files("$(projectdir)/tests/net/echo_server2.cpp")
+    add_deps("luce")
+    add_packages("fmt")
+
+target("test_http")
+    set_kind("binary")
+    add_files("$(projectdir)/tests/net/test_http.cpp")
+    add_deps("luce")
+    add_packages("fmt")
