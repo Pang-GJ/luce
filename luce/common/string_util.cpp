@@ -1,5 +1,7 @@
 #include "luce/common/string_util.hpp"
 
+namespace String {
+
 template <typename T>
 void JoinImpl(const T &parts, std::string_view delim, std::string *result) {
   size_t size = 0;
@@ -129,3 +131,5 @@ bool Contains(std::string_view str, std::string_view target) {
   auto pos = str.find(target);
   return pos != std::string_view::npos;
 }
+
+}  // namespace String

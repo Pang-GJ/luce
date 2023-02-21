@@ -45,7 +45,7 @@ struct HttpContext {
   void String(int code, std::string_view fmt, Args &&...args) {
     SetHeader("Content-Type", "text/plain");
     Status(code);
-    res_->SetBody(Format(fmt, std::forward<Args>(args)...));
+    res_->SetBody(String::Format(fmt, std::forward<Args>(args)...));
   }
 
   void JSON(int code, tinyjson::JObject &json_object) {

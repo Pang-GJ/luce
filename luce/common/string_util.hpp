@@ -12,6 +12,8 @@
 
 #include <fmt/core.h>
 
+namespace String {
+
 std::string Join(const std::vector<std::string_view> &parts,
                  std::string_view delim);
 
@@ -47,3 +49,5 @@ template <typename... Args>
 std::string Format(std::string_view real_time_fmt, Args &&...args) {
   return fmt::vformat(real_time_fmt, fmt::make_format_args(args...));
 }
+
+}  // namespace String

@@ -168,7 +168,7 @@ std::string HttpResponse::GetCodeDescript(int status_code) {
 }
 
 std::string HttpResponse::GetFileType(std::string_view file_name) {
-  auto type = Split(file_name, ".");
+  auto type = String::Split(file_name, ".");
   if (type.size() != 2) {
     return "text/plain;charset=utf-8";
   }

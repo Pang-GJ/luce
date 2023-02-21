@@ -18,13 +18,13 @@ struct Router {
       LOG_ERROR("could not DELETE now");
       return;
     }
-    if (!EndsWith(url, "/")) {
+    if (!String::EndsWith(url, "/")) {
       LOG_ERROR("register handler for {}: {} failed, url must ends with '/'",
                 method.data(), url.data());
       return;
     }
     LOG_INFO("method: {}, url: {}", method.data(), url.data());
-    auto key = Join({method, url}, "-");
+    auto key = String::Join({method, url}, "-");
     LOG_INFO("AddRouter key: {}", key.c_str());
     handlers_[key] = handler;
   }
@@ -32,7 +32,7 @@ struct Router {
   void Handle(const ContextPtr &ctx) {
     HandleFunc handler;
     bool ok = false;
-    auto key = Join({ctx->method_, ctx->path_}, "-");
+    auto key = String::Join({ctx->method_, ctx->path_}, "-");
     if (handlers_.contains(key)) {
       handler = handlers_[key];
       ok = true;
@@ -40,7 +40,7 @@ struct Router {
     if (ok) {
       handler(ctx);
     } else {
-      ctx->HTML(404, Format("404 Not Found: {} not at {}\n", ctx->method_,
+      ctx->HTML(404, String::Format("404 Not Found: {} not at {}\n", ctx->method_,
                             ctx->path_));
     }
   }

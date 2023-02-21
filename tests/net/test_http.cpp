@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
       return;
     }
     auto res = atoi(param1.c_str()) + atoi(param2.c_str());
-    ctx->HTML(200, Format("res: {}\n", res));
+    ctx->HTML(200, String::Format("res: {}\n", res));
   });
 
   net::TcpServer server(addr, thread_pool, &http_app);

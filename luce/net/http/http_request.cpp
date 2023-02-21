@@ -6,7 +6,7 @@ namespace net::http {
 
 void HttpRequest::Parse(std::string_view data) {
   // 分割出请求头和请求体
-  auto head_and_body = Split(data, "\r\n\r\n", true);
+  auto head_and_body = String::Split(data, "\r\n\r\n", true);
   if (head_and_body.size() != 2) {
     LOG_ERROR(
         "HTTP Request Data Error, dosen't have RequestBody, the split data "
@@ -18,7 +18,7 @@ void HttpRequest::Parse(std::string_view data) {
   }
 
   // 分割出请求行和请求头
-  auto line_and_head = Split(head_and_body[0], "\r\n", false);
+  auto line_and_head = String::Split(head_and_body[0], "\r\n", false);
   // 解析请求行
   ParseLine(line_and_head[0]);
   // 解析请求头
@@ -30,14 +30,14 @@ void HttpRequest::Parse(std::string_view data) {
 // 解析请求头
 void HttpRequest::ParseHeaders(std::vector<std::string_view> &headers) {
   for (size_t i = 1; i < headers.size(); ++i) {
-    if (!headers[i].empty() && Contains(headers[i], ":")) {
-      auto key_value = Split(headers[i], ':', false);
+    if (!headers[i].empty() && String::Contains(headers[i], ":")) {
+      auto key_value = String::Split(headers[i], ':', false);
       if (key_value.size() == 2) {
         // 去除空白
         std::string key{key_value[0]};
         std::string value{key_value[1]};
-        Trim(key);
-        Trim(value);
+        String::Trim(key);
+        String::Trim(value);
         this->headers_[key] = value;
       }
     }
@@ -46,7 +46,7 @@ void HttpRequest::ParseHeaders(std::vector<std::string_view> &headers) {
 
 // 解析请求行
 void HttpRequest::ParseLine(std::string_view line) {
-  auto line_datas = Split(line, ' ');
+  auto line_datas = String::Split(line, ' ');
   if (line_datas.size() != 3) {
     LOG_ERROR("HTTP Request Line error, it's size != 3");
   }
@@ -56,7 +56,7 @@ void HttpRequest::ParseLine(std::string_view line) {
 
   // 判断有没有参数
   bool has_url_params = false;
-  auto url_datas = Split(line_datas[1], '&');
+  auto url_datas = String::Split(line_datas[1], '&');
   if (url_datas.size() == 2) {
     has_url_params = true;
     this->uri_ = std::string{url_datas[0]};
@@ -71,30 +71,30 @@ void HttpRequest::ParseLine(std::string_view line) {
 
 // 解析请求行中的URL
 void HttpRequest::ParseURLParams(std::string_view url) {
-  auto params = Split(url, '&');
+  auto params = String::Split(url, '&');
   for (auto param : params) {
-    auto key_value = Split(param, '=');
+    auto key_value = String::Split(param, '=');
     if (key_value.size() == 2) {
       // 去除空白
       std::string key{key_value[0]};
       std::string value{key_value[1]};
-      Trim(key);
-      Trim(value);
+      String::Trim(key);
+      String::Trim(value);
       this->url_params_[key] = value;
     }
   }
 }
 
 void HttpRequest::ParseBody(std::string_view body) {
-  auto params = Split(body, '&');
+  auto params = String::Split(body, '&');
   for (auto param : params) {
-    auto key_value = Split(param, '=');
+    auto key_value = String::Split(param, '=');
     if (key_value.size() == 2) {
       // 去除空白
       std::string key{key_value[0]};
       std::string value{key_value[1]};
-      Trim(key);
-      Trim(value);
+      String::Trim(key);
+      String::Trim(value);
       this->body_params_[key] = value;
     }
   }
