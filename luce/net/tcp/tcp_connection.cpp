@@ -10,7 +10,7 @@
 namespace net {
 
 TcpConnection::TcpConnection(std::shared_ptr<Socket> sock, EventManager &event_manager)
-    : socket_(std::move(sock)), event_manager_(event_manager) {}
+    : event_manager_(event_manager), socket_(std::move(sock)) {}
 
 TcpConnection::~TcpConnection() {
   if (socket_->GetFd() != -1) {
