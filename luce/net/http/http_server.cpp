@@ -42,7 +42,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
     }
 
     http_request->Debug();
-    LOG_INFO("got a %s request on %s", http_request->method_.c_str(),
+    LOG_INFO("got a {} request on {}", http_request->method_.c_str(),
              http_request->url_.c_str());
 
     auto http_response = std::make_shared<HttpResponse>();
@@ -53,7 +53,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
 
     // TODO(pgj): check keep alive
     //    if (http_request->headers_.contains("Connection")) {
-    //      LOG_INFO("Connection: %s",
+    //      LOG_INFO("Connection: {}",
     //      http_request->headers_["Connection"].c_str()); if
     //      (http_request->headers_["Connection"] == "close") {
     //        break;
@@ -112,7 +112,7 @@ coro::Task<> HttpServer::ServerHTTP(TcpConnectionPtr conn,
                                     RequestPtr http_request,
                                     ResponsePtr http_response) {
   router_.Handle(std::make_shared<HttpContext>(http_request, http_response));
-  LOG_INFO("debug -> HTTP Response: %s", http_response->GetData().c_str());
+  LOG_INFO("debug -> HTTP Response: {}", http_response->GetData().c_str());
   co_await SendResponse(http_response, conn);
 }
 

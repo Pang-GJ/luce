@@ -10,7 +10,7 @@ void HttpRequest::Parse(std::string_view data) {
   if (head_and_body.size() != 2) {
     LOG_ERROR(
         "HTTP Request Data Error, dosen't have RequestBody, the split data "
-        "size: %zu",
+        "size: {}",
         head_and_body.size());
   }
   if (!head_and_body[1].empty()) {
@@ -101,11 +101,11 @@ void HttpRequest::ParseBody(std::string_view body) {
 }
 
 void HttpRequest::Debug() {
-  LOG_INFO("method: %s", method_.c_str());
-  LOG_INFO("http version: %s", http_version_.c_str());
-  LOG_INFO("url: %s", url_.c_str());
-  LOG_INFO("uri: %s", uri_.c_str());
-  LOG_INFO("body: %s", body_.c_str());
+  LOG_INFO("method: {}", method_.c_str());
+  LOG_INFO("http version: {}", http_version_.c_str());
+  LOG_INFO("url: {}", url_.c_str());
+  LOG_INFO("uri: {}", uri_.c_str());
+  LOG_INFO("body: {}", body_.c_str());
 }
 
 }  // namespace net::http

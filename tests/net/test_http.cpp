@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   });
 
   http_app.POST("/add/", [](const net::http::ContextPtr &ctx) {
-    LOG_INFO("POST run: %s", ctx->req_->body_.c_str());
+    LOG_INFO("POST run: {}", ctx->req_->body_.c_str());
 
     auto param1 = ctx->QueryBody("param1");
     auto param2 = ctx->QueryBody("param2");

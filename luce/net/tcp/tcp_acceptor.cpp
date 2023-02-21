@@ -11,7 +11,7 @@ TcpAcceptor::TcpAcceptor(TcpServer &server, int sock_fd) : server_(server) {
   socket_->SetReuseAddr(true);
   socket_->BindAddress(server.GetLocalAddr());
   socket_->Listen();
-  LOG_INFO("init sockfd: %d", socket_->GetFd());
+  LOG_INFO("init sockfd: {}", socket_->GetFd());
 }
 
 auto TcpAcceptor::accept() -> coro::Task<TcpConnectionPtr> {

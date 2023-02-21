@@ -98,7 +98,7 @@ class AcceptAwaiter {
     if (conn_fd_ < 0) {
       conn_fd_ = do_accept(acceptor_->GetSocket()->GetFd());
     }
-    LOG_DEBUG("accept %d", conn_fd_);
+    LOG_DEBUG("accept {}", conn_fd_);
     return conn_fd_;
   }
 

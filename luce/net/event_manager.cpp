@@ -29,7 +29,7 @@ void EventManager::Start() {
       if (errno == EINTR) {
         continue;
       }
-      LOG_ERROR("epoll_wait error, info: %s", strerror(errno));
+      LOG_ERROR("epoll_wait error, info: {}", strerror(errno));
       LOG_FATAL("epoll_wait error");
     }
 

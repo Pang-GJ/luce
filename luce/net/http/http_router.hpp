@@ -19,13 +19,13 @@ struct Router {
       return;
     }
     if (!EndsWith(url, "/")) {
-      LOG_ERROR("register handler for %s: %s failed, url must ends with '/'",
+      LOG_ERROR("register handler for {}: {} failed, url must ends with '/'",
                 method.data(), url.data());
       return;
     }
-    LOG_INFO("method: %s, url: %s", method.data(), url.data());
+    LOG_INFO("method: {}, url: {}", method.data(), url.data());
     auto key = Join({method, url}, "-");
-    LOG_INFO("AddRouter key: %s", key.c_str());
+    LOG_INFO("AddRouter key: {}", key.c_str());
     handlers_[key] = handler;
   }
 

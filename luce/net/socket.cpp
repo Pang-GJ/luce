@@ -18,19 +18,19 @@ Socket::~Socket() {
 void Socket::BindAddress(const InetAddress &local_addr) {
   int ret = ::bind(fd_, local_addr.GetSockAddr(), sizeof(struct sockaddr));
   if (ret != 0) {
-    LOG_FATAL("bind sockfd: %d failed, errno: %d", fd_, errno);
+    LOG_FATAL("bind sockfd: {} failed, errno: {}", fd_, errno);
   }
 }
 void Socket::Listen() {
   int ret = ::listen(fd_, SOMAXCONN);
   if (ret != 0) {
-    LOG_FATAL("listen sockfd: %d failed, errno: %d", fd_, errno);
+    LOG_FATAL("listen sockfd: {} failed, errno: {}", fd_, errno);
   }
 }
 
 void Socket::ShutdownWrite() {
   if (::shutdown(fd_, SHUT_WR) < 0) {
-    LOG_ERROR("shutdown write sockfd: %d error\n", fd_);
+    LOG_ERROR("shutdown write sockfd: {} error\n", fd_);
   }
 }
 

@@ -7,7 +7,6 @@
 #include "luce/common/noncopyable.h"
 
 #ifdef USE_ORIGINAL
-// LOG_INFO("%s %d", arg1, arg2)
 #define LOG_INFO(LogmsgFormat, ...)                   \
   do {                                                \
     Logger &logger = Logger::instance();              \

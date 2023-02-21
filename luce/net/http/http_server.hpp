@@ -43,11 +43,11 @@ class HttpServer : public TcpApplication {
 
  private:
   coro::Task<> OnOpen(TcpConnectionPtr conn) override {
-    LOG_INFO("connection open: fd = %d", conn->GetSocket()->GetFd());
+    LOG_INFO("connection open: fd = {}", conn->GetSocket()->GetFd());
     co_return;
   }
   coro::Task<> OnClose(TcpConnectionPtr conn) override {
-    LOG_INFO("connection close: fd = %d", conn->GetSocket()->GetFd());
+    LOG_INFO("connection close: fd = {}", conn->GetSocket()->GetFd());
     co_return;
   }
 

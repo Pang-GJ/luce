@@ -24,17 +24,17 @@ class EchoServer : public net::TcpApplication {
       if (recv_len <= 0) {
         co_return;
       }
-      LOG_DEBUG("buffer: %s\n", buffer);
+      LOG_DEBUG("buffer: {}\n", buffer);
     }
   }
 
   coro::Task<> OnOpen(net::TcpConnectionPtr conn) override {
-    //    LOG_INFO("sockfd: %d open", conn->GetSocket()->GetFd());
+    //    LOG_INFO("sockfd: {} open", conn->GetSocket()->GetFd());
     co_return;
   }
 
   coro::Task<> OnClose(net::TcpConnectionPtr conn) override {
-    //    LOG_INFO("sockfd: %d close", conn->GetSocket()->GetFd());
+    //    LOG_INFO("sockfd: {} close", conn->GetSocket()->GetFd());
     co_return;
   }
 };
