@@ -11,17 +11,107 @@
 #include "luce/common/logger.hpp"
 
 // 线程池
+class ThreadPool {
+ public:
+  explicit ThreadPool(size_t thread_num);
+  ~ThreadPool();
+
+  template <class F, class... Args>
+  auto Commit(F &&f, Args &&...args) -> std::future<decltype(f(args...))>;
+
+  void Shutdown();
+
+  size_t Size() const { return workers_.size(); }
+
+ private:
+  std::vector<std::thread> workers_;
+  std::queue<std::packaged_task<void()>> tasks_;
+
+  // sync
+  std::mutex queue_mtx_;
+  std::condition_variable condition;
+  std::condition_variable condition_producers_;
+  std::atomic<bool> stop_;
+};
+
+inline ThreadPool::ThreadPool(size_t thread_num) : stop_(false) {
+  for (size_t i = 0; i < thread_num; ++i) {
+    workers_.emplace_back([this] {
+      for (;;) {
+        std::packaged_task<void()> task;
+        {
+          std::unique_lock<std::mutex> lock(queue_mtx_);
+          this->condition.wait(
+              lock, [this] { return this->stop_ || !this->tasks_.empty(); });
+          if (this->stop_) {
+            return;
+          }
+          if (this->tasks_.empty()) {
+            continue;
+          }
+          task = std::move(this->tasks_.front());
+          this->tasks_.pop();
+          if (this->tasks_.empty()) {
+            // notify that the queue is empty
+            condition_producers_.notify_one();
+          }
+        }
+        task();
+      }
+    });
+  }
+}
+
+inline ThreadPool::~ThreadPool() {
+  if (!stop_) {
+    Shutdown();
+  }
+}
+
+// add new work item to thead pool
+template <class F, class... Args>
+inline auto ThreadPool::Commit(F &&f, Args &&...args)
+    -> std::future<decltype(f(args...))> {
+  using return_type = decltype(f(args...));
+
+  std::packaged_task<return_type()> task(
+      std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+  std::future<return_type> future = task.get_future();
+  {
+    std::unique_lock<std::mutex> lock(queue_mtx_);
+    if (!stop_) {
+      tasks_.emplace(std::move(task));
+    }
+  }
+  condition.notify_one();
+  return future;
+}
+
+inline void ThreadPool::Shutdown() {
+  LOG_INFO("thread pool shutdown");
+  {
+    std::unique_lock<std::mutex> lock(queue_mtx_);
+    condition_producers_.wait(lock, [this] { return this->tasks_.empty(); });
+    stop_ = true;
+  }
+  condition.notify_all();
+  for (std::thread &worker : workers_) {
+    worker.join();
+  }
+}
+
 // 可以增长 method: AddThread
 // 可选支持自动扩缩容
 // 支持多参数
+/**
 class ThreadPool {
   using TaskType = std::function<void()>;
 
  public:
   explicit ThreadPool(size_t init_size = 1, bool auto_grow = false,
-                      size_t max_threads = std::thread::hardware_concurrency())
-      : init_threads_num_(init_size),
-        max_threads_num_(max_threads),
+                      size_t max_threads =
+std::thread::hardware_concurrency()) : max_threads_num_(max_threads),
+        init_threads_num_(init_size),
         auto_grow_(auto_grow) {
     AddThread(init_threads_num_);
   }
@@ -153,3 +243,4 @@ class ThreadPool {
   const bool auto_grow_;  // 是否支持自动扩缩容
   std::mutex grow_mtx_;   // 线程池增长互斥锁
 };
+**/

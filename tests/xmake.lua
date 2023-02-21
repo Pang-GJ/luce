@@ -1,11 +1,19 @@
 add_requires("doctest")
-add_requires("fmt", {system = false, version = "9.1.0"})
+add_requires("spdlog", {system = false, configs = {header_only = true, fmt_external = true}})
+add_requireconfs("spdlog.fmt", {system = false, override = true, version = "9.1.0", configs = {header_only = true}})
 
 target("test_threadpool")
     set_kind("binary")
     add_files("$(projectdir)/tests/common/test_threadpool.cpp")
     add_deps("luce")
-    add_packages("fmt")
+    add_packages("spdlog")
+
+target("test_logger")
+  set_kind("binary")
+  set_group("tests")
+  add_files("$(projectdir)/tests/common/test_logger.cpp")
+  add_packages("doctest", "spdlog")
+  add_deps("luce")
 
 target("test_task")
     set_kind("binary")

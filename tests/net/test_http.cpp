@@ -5,7 +5,6 @@
 #include "luce/net/tcp_all.hpp"
 
 int main(int argc, char *argv[]) {
-  ThreadPool thread_pool(8);
   net::InetAddress addr{12345};
   net::http::HttpServer http_app;
 
@@ -26,7 +25,7 @@ int main(int argc, char *argv[]) {
     ctx->HTML(200, String::Format("res: {}\n", res));
   });
 
-  net::TcpServer server(addr, thread_pool, &http_app);
+  net::TcpServer server(addr, &http_app, 8);
   server.Start();
   LOG_INFO("all down");
 

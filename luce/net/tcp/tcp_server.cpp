@@ -4,8 +4,8 @@
 namespace net {
 
 TcpServer::TcpServer(const net::InetAddress &local_addr,
-                     ThreadPool &thread_pool, net::TcpApplication *app)
-    : local_addr_(local_addr), thread_pool_(thread_pool), app_(app) {
+                      net::TcpApplication *app, size_t thread_num)
+    : local_addr_(local_addr), app_(app), thread_pool_(std::make_unique<ThreadPool>(thread_num)) {
   LOG_INFO("TcpServer start");
   auto sock_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
                           IPPROTO_TCP);
@@ -17,16 +17,16 @@ TcpServer::TcpServer(const net::InetAddress &local_addr,
   main_reactor_ = std::make_shared<EventManager>(128);
   //  thread_pool_.Commit([this]() { main_reactor_->Start(); });
 
-  auto sz = thread_pool_.Size();
+  auto sz = thread_pool_->Size();
   for (size_t i = 0; i < sz / 2; ++i) {
     sub_reactors_.emplace_back(std::make_shared<EventManager>());
-    thread_pool_.Commit([this, i]() { this->sub_reactors_[i]->Start(); });
+    thread_pool_->Commit([this, i]() { this->sub_reactors_[i]->Start(); });
   }
 }
 
 void TcpServer::Start(bool async_start) {
   if (async_start) {
-    thread_pool_.Commit([&]() { AcceptLoop(); });
+    thread_pool_->Commit([&]() { AcceptLoop(); });
   }
   main_reactor_->Start();
 }
@@ -37,7 +37,7 @@ void TcpServer::Shutdown() {
   for (auto &sub_reactor : sub_reactors_) {
     sub_reactor->Shutdown();
   }
-  thread_pool_.Shutdown();
+  thread_pool_->Shutdown();
   // TODO(pgj): more component to shutdown
 }
 
@@ -48,7 +48,7 @@ coro::Task<void> TcpServer::AcceptLoop() {
     }
     auto conn = co_await acceptor_->accept();
     if (conn != nullptr) {
-      thread_pool_.Commit(
+      thread_pool_->Commit(
           [this, conn]() { this->app_->HandleRequest(conn, *this); });
     }
   }

@@ -40,10 +40,9 @@ class EchoServer : public net::TcpApplication {
 };
 
 int main(int argc, char *argv[]) {
-  ThreadPool thread_pool(8);
   net::InetAddress addr{12345};
   EchoServer app;
-  net::TcpServer server(addr, thread_pool, &app);
+  net::TcpServer server(addr, &app, 8);
   server.Start();
   LOG_INFO("all down");
 }

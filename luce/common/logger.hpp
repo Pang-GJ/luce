@@ -75,7 +75,6 @@ class Logger : noncopyable {
 };
 #else
 
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE//必须定义这个宏,才能输出文件名和行号
 #include <spdlog/spdlog.h>
 
 #define LOG_INFO(LogmsgFormat, ...)            \
@@ -97,6 +96,11 @@ class Logger : noncopyable {
   do {                                         \
     spdlog::warn(LogmsgFormat, ##__VA_ARGS__); \
     exit(-1);                                  \
+  } while (0)
+
+#define LOG_WARN(LogmsgFormat, ...)            \
+  do {                                         \
+    spdlog::warn(LogmsgFormat, ##__VA_ARGS__); \
   } while (0)
 
 #endif

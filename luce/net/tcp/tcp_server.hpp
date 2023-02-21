@@ -16,8 +16,8 @@ class TcpAcceptor;
 
 class TcpServer : noncopyable {
  public:
-  TcpServer(const InetAddress &local_addr, ThreadPool &thread_pool,
-            TcpApplication *app);
+  TcpServer(const InetAddress &local_addr, TcpApplication *app,
+            size_t thread_num = std::thread::hardware_concurrency());
 
   ~TcpServer();
 
@@ -46,9 +46,10 @@ class TcpServer : noncopyable {
   std::atomic<size_t> cnt_{0};
   std::atomic<bool> is_shutdown_{false};
   const InetAddress &local_addr_;
-  ThreadPool &thread_pool_;
+  // ThreadPool &thread_pool_;
   TcpApplication *app_;
   std::unique_ptr<TcpAcceptor> acceptor_;
+  std::unique_ptr<ThreadPool> thread_pool_;
 };
 
 }  // namespace net
