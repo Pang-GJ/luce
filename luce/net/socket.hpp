@@ -40,6 +40,24 @@ class Socket : noncopyable {
 
   void EventDetach() { detached_ = true; }
 
+  void SetRecvCoro(std::coroutine_handle<> read_coro) {
+    handle.recv_coro = read_coro;
+  }
+
+  void DelRecvCoro() { handle.recv_coro = nullptr; }
+
+  void SetSendCoro(std::coroutine_handle<> write_coro) {
+    handle.send_coro = write_coro;
+  }
+
+  void DelSendCoro() { handle.send_coro = nullptr; }
+
+  struct Handle {
+    std::coroutine_handle<> recv_coro;
+    std::coroutine_handle<> send_coro;
+  };
+  Handle handle;
+
  private:
   int fd_;
   unsigned int io_state_{0};  // for epoll

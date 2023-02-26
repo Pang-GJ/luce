@@ -21,7 +21,6 @@ class EventManager {
   void Start();
 
   void Attach(const std::shared_ptr<Socket> &socket,
-              std::coroutine_handle<> coro_handle,
               unsigned int events = EPOLLIN | EPOLLET);
 
   void Detach(const std::shared_ptr<Socket> &socket);
@@ -38,8 +37,7 @@ class EventManager {
 
  private:
   void UpdateEvent(const std::shared_ptr<Socket> &socket,
-                   unsigned int new_state, std::coroutine_handle<> coro_handle);
-
+                   unsigned int new_state);
   int epfd_;
   bool is_shutdown_{false};
   std::vector<struct epoll_event> events_;
