@@ -9,12 +9,21 @@ ps: “高性能”是指单看echo_server，性能跟`muduo`接近，没有进�
 C++20带来了无栈协程，但是不方便普通用户使用，目前的标准库适合库作者使用。  
 我想慢慢地封装一层协程异步框架，计划参考`rust`中的实现。
 
+### 编译运行
+本项目采用了`xmake`作为构建系统、依赖管理。
+```
+# 编译
+xmake build
+# 运行echo_server
+xmake run echo_server
+```
+
 ## 目前已实现的部分
 
 - IO多路复用（epoll）+ MultiReactor
 - C++20协程支持 co_await/co_return
     - 简单使用coro::Task<>即可令函数成为协程
-- 动态线程池
+- 线程池
 - EventManager/Reactor
 - TcpServer/TcpAcceptor/TcpConnection/TcpApplication
 - [高性能异步日志](https://github.com/Pang-GJ/plog)
