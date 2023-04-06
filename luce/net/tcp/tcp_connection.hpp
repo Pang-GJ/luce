@@ -24,7 +24,9 @@ class TcpConnection : noncopyable,
   auto GetSocket() -> std::shared_ptr<Socket> { return socket_; }
 
   void Close() {
-    socket_->Close();
+    if (!is_closed_) {
+      socket_->Close();
+    }
     is_closed_ = true;
   }
 
@@ -36,7 +38,7 @@ class TcpConnection : noncopyable,
 
   EventManager &event_manager_;
   std::shared_ptr<Socket> socket_;
-  bool is_closed_{false};
+  std::atomic<bool> is_closed_{false};
 };
 
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;

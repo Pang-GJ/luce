@@ -22,7 +22,7 @@ class Socket : noncopyable {
 
   void Close() {
     ::close(fd_);
-    close_ = true;
+    is_closed_ = true;
   }
 
   void ShutdownWrite();
@@ -67,7 +67,7 @@ class Socket : noncopyable {
   int fd_;
   unsigned int io_state_{0};  // for epoll
   bool detached_{true};
-  bool close_{false};
+  std::atomic<bool> is_closed_{false};
 };
 
 }  // namespace net

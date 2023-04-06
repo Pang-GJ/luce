@@ -10,7 +10,7 @@
 namespace net {
 
 Socket::~Socket() {
-  if (fd_ != -1 && !close_) {
+  if (fd_ != -1 && !is_closed_) {
     LOG_INFO("close fd = {}", fd_);
     ::close(fd_);
   }

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -26,12 +27,14 @@ class TimerManager {
   size_t AddTimer(uint32_t milliseconds, const TimerTask &callback) {
     TimePoint now = std::chrono::system_clock::now();
     TimePoint expiry_time = now + std::chrono::milliseconds(milliseconds);
+    std::unique_lock lock(mtx_);
     auto id = timer_id_++;
-    timers_.emplace_back(expiry_time, id, callback);
+    Push(Timer{expiry_time, id, callback});
     return id;
   }
 
   void RemoveTimer(size_t timer_id) {
+    std::unique_lock lock(mtx_);
     auto iter = std::find_if(
         timers_.begin(), timers_.end(),
         [&](const Timer &timer) { return timer.timer_id == timer_id; });
@@ -43,10 +46,12 @@ class TimerManager {
   void Tick() {
     while (!stop_) {
       auto now = std::chrono::system_clock::now();
-      if (!timers_.empty() && now >= top().expiry_time) {
+      std::unique_lock lock(mtx_);
+      if (!Empty() && now >= top().expiry_time) {
         auto timer = pop();
         std::thread(timer.task).detach();
       } else {
+        lock.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
     }
@@ -92,6 +97,8 @@ class TimerManager {
     HeapifyDown(index);
   }
 
+  bool Empty() const { return timers_.empty(); }
+
   Timer &top() { return timers_.front(); }
 
   Timer pop() {
@@ -110,7 +117,8 @@ class TimerManager {
 
   std::vector<Timer> timers_;  // heap
   static size_t timer_id_;
-  bool stop_{false};
+  std::atomic<bool> stop_{false};
+  std::mutex mtx_;
 };
 
 }  // namespace timer

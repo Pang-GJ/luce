@@ -46,6 +46,7 @@ void TcpServer::Shutdown() {
   for (auto &sub_reactor : sub_reactors_) {
     sub_reactor->Shutdown();
   }
+  Singleton<timer::TimerManager>::GetInstance()->Shutdown();
   reactor_thread_pool_->Shutdown();
   work_thread_pool_->Shutdown();
   // TODO(pgj): more component to shutdown

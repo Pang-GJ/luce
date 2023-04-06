@@ -16,7 +16,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
   for (;;) {
     char buffer[MAX_REQUEST_SIZE] = {0};
     auto timer_id =
-        Singleton<timer::TimerManager>::GetInstance()->AddTimer(1000, [&] {
+        Singleton<timer::TimerManager>::GetInstance()->AddTimer(1000, [=] {
           LOG_DEBUG("timer work ");
           conn->Close();
         });
