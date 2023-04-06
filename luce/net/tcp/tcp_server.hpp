@@ -5,6 +5,7 @@
 #include "luce/coro/task.hpp"
 #include "luce/net/event_manager.hpp"
 #include "luce/net/tcp/tcp_application.hpp"
+#include "luce/timer/timer.hpp"
 
 #include <atomic>
 #include <memory>
@@ -49,7 +50,8 @@ class TcpServer : noncopyable {
   // ThreadPool &thread_pool_;
   TcpApplication *app_;
   std::unique_ptr<TcpAcceptor> acceptor_;
-  std::unique_ptr<ThreadPool> thread_pool_;
+  std::unique_ptr<ThreadPool> reactor_thread_pool_;
+  std::shared_ptr<ThreadPool> work_thread_pool_;
 };
 
 }  // namespace net

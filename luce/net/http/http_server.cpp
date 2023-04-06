@@ -4,15 +4,22 @@
 
 #include "luce/common/file_util.hpp"
 #include "luce/common/logger.hpp"
+#include "luce/common/singleton.hpp"
 #include "luce/io/io_awaiter.hpp"
 #include "luce/net/http/http_response.hpp"
 #include "luce/net/http/http_server.hpp"
+#include "luce/timer/timer.hpp"
 
 namespace net::http {
 
 coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
   for (;;) {
     char buffer[MAX_REQUEST_SIZE] = {0};
+    auto timer_id =
+        Singleton<timer::TimerManager>::GetInstance()->AddTimer(1000, [&] {
+          LOG_DEBUG("timer work ");
+          conn->Close();
+        });
     auto recv_len = co_await conn->read(&buffer, sizeof buffer);
     if (recv_len < 0) {
       break;
@@ -40,6 +47,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
         http_request->body_ += buffer;
       }
     }
+    Singleton<timer::TimerManager>::GetInstance()->RemoveTimer(timer_id);
 
     http_request->Debug();
     LOG_INFO("got a {} request on {}", http_request->method_.c_str(),
@@ -52,14 +60,13 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
     co_await ServerHTTP(conn, http_request, http_response);
 
     // TODO(pgj): check keep alive
-    //    if (http_request->headers_.contains("Connection")) {
-    //      LOG_INFO("Connection: {}",
-    //      http_request->headers_["Connection"].c_str()); if
-    //      (http_request->headers_["Connection"] == "close") {
-    //        break;
-    //      }
-    //    }
-    break;
+    if (http_request->headers_.contains("Connection")) {
+      LOG_DEBUG("Connection: {}", http_request->headers_["Connection"].c_str());
+      if (http_request->headers_["Connection"] == "close") {
+        break;
+      }
+    }
+    // break;
   }
   co_return;
 }

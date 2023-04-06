@@ -1,11 +1,17 @@
 #include "luce/net/tcp/tcp_server.hpp"
+#include "luce/common/singleton.hpp"
+#include "luce/common/thread_pool.hpp"
 #include "luce/net/tcp/tcp_acceptor.hpp"
+#include "luce/timer/timer.hpp"
 
 namespace net {
 
 TcpServer::TcpServer(const net::InetAddress &local_addr,
-                      net::TcpApplication *app, size_t thread_num)
-    : local_addr_(local_addr), app_(app), thread_pool_(std::make_unique<ThreadPool>(thread_num)) {
+                     net::TcpApplication *app, size_t thread_num)
+    : local_addr_(local_addr),
+      app_(app),
+      reactor_thread_pool_(std::make_unique<ThreadPool>(thread_num / 2)),
+      work_thread_pool_(std::make_unique<ThreadPool>(thread_num)) {
   LOG_INFO("TcpServer start");
   auto sock_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
                           IPPROTO_TCP);
@@ -14,19 +20,22 @@ TcpServer::TcpServer(const net::InetAddress &local_addr,
   }
   acceptor_ = std::make_unique<TcpAcceptor>(*this, sock_fd);
 
-  main_reactor_ = std::make_shared<EventManager>(128);
+  main_reactor_ = std::make_shared<EventManager>(nullptr, 128);
   //  thread_pool_.Commit([this]() { main_reactor_->Start(); });
 
-  auto sz = thread_pool_->Size();
-  for (size_t i = 0; i < sz / 2; ++i) {
-    sub_reactors_.emplace_back(std::make_shared<EventManager>());
-    thread_pool_->Commit([this, i]() { this->sub_reactors_[i]->Start(); });
+  for (size_t i = 0; i < thread_num / 2 - 1; ++i) {
+    sub_reactors_.emplace_back(
+        std::make_shared<EventManager>(work_thread_pool_));
+    reactor_thread_pool_->Commit(
+        [this, i]() { this->sub_reactors_[i]->Start(); });
   }
+  work_thread_pool_->Commit(
+      []() { Singleton<timer::TimerManager>::GetInstance()->Tick(); });
 }
 
 void TcpServer::Start(bool async_start) {
   if (async_start) {
-    thread_pool_->Commit([&]() { AcceptLoop(); });
+    reactor_thread_pool_->Commit([&]() { AcceptLoop(); });
   }
   main_reactor_->Start();
 }
@@ -37,7 +46,8 @@ void TcpServer::Shutdown() {
   for (auto &sub_reactor : sub_reactors_) {
     sub_reactor->Shutdown();
   }
-  thread_pool_->Shutdown();
+  reactor_thread_pool_->Shutdown();
+  work_thread_pool_->Shutdown();
   // TODO(pgj): more component to shutdown
 }
 
@@ -48,7 +58,7 @@ coro::Task<void> TcpServer::AcceptLoop() {
     }
     auto conn = co_await acceptor_->accept();
     if (conn != nullptr) {
-      thread_pool_->Commit(
+      work_thread_pool_->Commit(
           [this, conn]() { this->app_->HandleRequest(conn, *this); });
     }
   }

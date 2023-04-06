@@ -21,20 +21,26 @@ class ReadAwaiter {
   // if IO is ready (recv_ > 0), then we should not suspend
   auto await_ready() -> bool {
     LOG_DEBUG("recv ready");
-    recv_ = ::read(conn_->GetSocket()->GetFd(), buffer_, len_);
+    if (!conn_->IsClosed()) {
+      recv_ = ::read(conn_->GetSocket()->GetFd(), buffer_, len_);
+    }
     return recv_ >= 0;
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
     LOG_DEBUG("recv suspend");
-    conn_->GetEventManager().AddRecv(conn_->GetSocket(), handle);
+    if (!conn_->IsClosed()) {
+      conn_->GetEventManager().AddRecv(conn_->GetSocket(), handle);
+    }
   }
 
   auto await_resume() -> ssize_t {
     LOG_DEBUG("recv resume");
     if (recv_ < 0) {
-      conn_->GetEventManager().DelRecv(conn_->GetSocket());
-      recv_ = ::read(conn_->GetSocket()->GetFd(), buffer_, len_);
+      if (!conn_->IsClosed()) {
+        conn_->GetEventManager().DelRecv(conn_->GetSocket());
+        recv_ = ::read(conn_->GetSocket()->GetFd(), buffer_, len_);
+      }
     }
     return recv_;
   }
@@ -53,20 +59,26 @@ class WriteAwaiter {
 
   auto await_ready() -> bool {
     LOG_DEBUG("send ready");
-    send_ = ::write(conn_->GetSocket()->GetFd(), buffer_, len_);
+    if (!conn_->IsClosed()) {
+      send_ = ::write(conn_->GetSocket()->GetFd(), buffer_, len_);
+    }
     return send_ >= 0;
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
     LOG_DEBUG("send suspend");
-    conn_->GetEventManager().AddSend(conn_->GetSocket(), handle);
+    if (!conn_->IsClosed()) {
+      conn_->GetEventManager().AddSend(conn_->GetSocket(), handle);
+    }
   }
 
   auto await_resume() -> ssize_t {
     LOG_DEBUG("send resume");
     if (send_ < 0) {
-      conn_->GetEventManager().DelSend(conn_->GetSocket());
-      send_ = ::write(conn_->GetSocket()->GetFd(), buffer_, len_);
+      if (!conn_->IsClosed()) {
+        conn_->GetEventManager().DelSend(conn_->GetSocket());
+        send_ = ::write(conn_->GetSocket()->GetFd(), buffer_, len_);
+      }
     }
     return send_;
   }

@@ -1,16 +1,21 @@
 #include <sys/epoll.h>
 #include <cerrno>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 #include "luce/common/logger.hpp"
+#include "luce/common/thread_pool.hpp"
 #include "luce/net/event_manager.hpp"
 #include "luce/net/socket.hpp"
 
 namespace net {
 
-EventManager::EventManager(size_t init_size)
-    : epfd_(epoll_create1(EPOLL_CLOEXEC)), events_(init_size) {
+EventManager::EventManager(std::shared_ptr<ThreadPool> work_thread_pool,
+                           size_t init_size)
+    : epfd_(epoll_create1(EPOLL_CLOEXEC)),
+      events_(init_size),
+      work_thread_pool_(std::move(work_thread_pool)) {
   if (epfd_ == -1) {
     LOG_FATAL("epoll_create1 error");
   }
@@ -42,13 +47,21 @@ void EventManager::Start() {
         auto handle = static_cast<Socket::Handle *>(events_[i].data.ptr);
         auto recv_coro = handle->recv_coro;
         LOG_DEBUG("epoll_await resume recv handle");
-        recv_coro.resume();
+        if (work_thread_pool_) {
+          work_thread_pool_->Commit([&]() { recv_coro.resume(); });
+        } else {
+          recv_coro.resume();
+        }
 
       } else if ((events_[i].events & EPOLLOUT) != 0U) {
         auto handle = static_cast<Socket::Handle *>(events_[i].data.ptr);
         auto send_coro = handle->send_coro;
         LOG_DEBUG("epoll_await resume send handle");
-        send_coro.resume();
+        if (work_thread_pool_) {
+          work_thread_pool_->Commit([&]() { send_coro.resume(); });
+        } else {
+          send_coro.resume();
+        }
       }
     }
   }

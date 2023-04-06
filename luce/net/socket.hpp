@@ -20,6 +20,11 @@ class Socket : noncopyable {
 
   void Listen();
 
+  void Close() {
+    ::close(fd_);
+    close_ = true;
+  }
+
   void ShutdownWrite();
 
   void SetTcpNoDelay(bool on);
@@ -62,6 +67,7 @@ class Socket : noncopyable {
   int fd_;
   unsigned int io_state_{0};  // for epoll
   bool detached_{true};
+  bool close_{false};
 };
 
 }  // namespace net

@@ -2,9 +2,11 @@
 
 #include <sys/epoll.h>
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include "luce/common/singleton.hpp"
+#include "luce/common/thread_pool.hpp"
 #include "luce/coro/task.hpp"
 
 namespace net {
@@ -14,7 +16,7 @@ class Socket;
 // a epoll manager for coroutine awaitable
 class EventManager {
  public:
-  explicit EventManager(size_t init_size = 16);
+  explicit EventManager(std::shared_ptr<ThreadPool> work_thread_pool, size_t init_size = 16);
 
   ~EventManager() = default;
 
@@ -41,6 +43,7 @@ class EventManager {
   int epfd_;
   bool is_shutdown_{false};
   std::vector<struct epoll_event> events_;
+  std::shared_ptr<ThreadPool> work_thread_pool_;
 };
 
 }  // namespace net
