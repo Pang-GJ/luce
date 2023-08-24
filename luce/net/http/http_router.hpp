@@ -30,18 +30,13 @@ struct Router {
   }
 
   void Handle(const ContextPtr &ctx) {
-    HandleFunc handler;
-    bool ok = false;
     auto key = String::Join({ctx->method_, ctx->path_}, "-");
     if (handlers_.contains(key)) {
-      handler = handlers_[key];
-      ok = true;
-    }
-    if (ok) {
+      const auto &handler = handlers_[key];
       handler(ctx);
     } else {
-      ctx->HTML(404, String::Format("404 Not Found: {} not at {}\n", ctx->method_,
-                            ctx->path_));
+      ctx->HTML(404, String::Format("404 Not Found: {} not at {}\n",
+                                    ctx->method_, ctx->path_));
     }
   }
 

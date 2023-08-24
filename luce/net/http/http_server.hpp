@@ -3,18 +3,17 @@
 #include "luce/common/logger.hpp"
 #include "luce/common/string_util.hpp"
 #include "luce/coro/task.hpp"
-#include "luce/net/tcp_all.hpp"
 #include "luce/net/http/http_context.hpp"
 #include "luce/net/http/http_request.hpp"
 #include "luce/net/http/http_response.hpp"
 #include "luce/net/http/http_router.hpp"
+#include "luce/net/tcp_all.hpp"
 
 #include <list>
 #include <memory>
 #include <string>
 
 namespace net::http {
-
 
 class HttpServer : public TcpApplication {
  public:
@@ -42,15 +41,6 @@ class HttpServer : public TcpApplication {
   }
 
  private:
-  coro::Task<> OnOpen(TcpConnectionPtr conn) override {
-    LOG_INFO("connection open: fd = {}", conn->GetSocket()->GetFd());
-    co_return;
-  }
-  coro::Task<> OnClose(TcpConnectionPtr conn) override {
-    LOG_INFO("connection close: fd = {}", conn->GetSocket()->GetFd());
-    co_return;
-  }
-
   coro::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override;
 
   coro::Task<> ServerHTTP(TcpConnectionPtr conn, RequestPtr http_request,
