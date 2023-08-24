@@ -41,7 +41,7 @@ class EventManager {
   void UpdateEvent(const std::shared_ptr<Socket> &socket,
                    unsigned int new_state);
   int epfd_;
-  bool is_shutdown_{false};
+  std::atomic<bool> is_shutdown_{false};
   std::vector<struct epoll_event> events_;
   std::shared_ptr<ThreadPool> work_thread_pool_;
 };

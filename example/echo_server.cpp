@@ -27,16 +27,6 @@ class EchoServer : public net::TcpApplication {
       LOG_DEBUG("buffer: {}\n", buffer);
     }
   }
-
-  coro::Task<> OnOpen(net::TcpConnectionPtr conn) override {
-    //    LOG_INFO("sockfd: {} open", conn->GetSocket()->GetFd());
-    co_return;
-  }
-
-  coro::Task<> OnClose(net::TcpConnectionPtr conn) override {
-    //    LOG_INFO("sockfd: {} close", conn->GetSocket()->GetFd());
-    co_return;
-  }
 };
 
 int main(int argc, char *argv[]) {

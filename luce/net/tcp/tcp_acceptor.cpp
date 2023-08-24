@@ -21,7 +21,7 @@ auto TcpAcceptor::accept() -> coro::Task<TcpConnectionPtr> {
   }
 
   auto peer_sock = std::make_shared<Socket>(peer_fd);
-  co_return std::make_shared<TcpConnection>(peer_sock, server_.GetSubReactor());
+  co_return std::make_shared<TcpConnection>(peer_sock, server_.GetMainReactor());
 }
 
 }  // namespace net

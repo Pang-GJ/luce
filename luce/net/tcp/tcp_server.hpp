@@ -47,7 +47,6 @@ class TcpServer : noncopyable {
   std::atomic<size_t> cnt_{0};
   std::atomic<bool> is_shutdown_{false};
   const InetAddress &local_addr_;
-  // ThreadPool &thread_pool_;
   TcpApplication *app_;
   std::unique_ptr<TcpAcceptor> acceptor_;
   std::unique_ptr<ThreadPool> reactor_thread_pool_;

@@ -16,14 +16,9 @@ class TcpApplication {
   TcpApplication() = default;
 
   coro::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer &server);
-  //    void HandleData(TcpConnectionPtr conn, TcpServer &server);
-  //    void HandleClose(TcpConnectionPtr conn);
 
  protected:
-  virtual coro::Task<> OnRequest(TcpConnectionPtr conn,
-                                     TcpServer &server) = 0;
-  virtual coro::Task<> OnOpen(TcpConnectionPtr conn) = 0;
-  virtual coro::Task<> OnClose(TcpConnectionPtr conn) = 0;
+  virtual coro::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) = 0;
 
  private:
   std::mutex mtx_;

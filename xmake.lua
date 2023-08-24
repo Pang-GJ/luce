@@ -8,8 +8,8 @@ set_warnings("all")
 set_languages("cxx20")
 
 -- add build mode
--- add_rules("mode.release", "mode.debug")
-add_rules("mode.debug")
+add_rules("mode.release", "mode.debug")
+-- add_rules("mode.debug")
 
 -- inclue subdirs
 includes("luce", "tests", "example")

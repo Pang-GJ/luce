@@ -10,7 +10,7 @@ TcpServer::TcpServer(const net::InetAddress &local_addr,
                      net::TcpApplication *app, size_t thread_num)
     : local_addr_(local_addr),
       app_(app),
-      reactor_thread_pool_(std::make_unique<ThreadPool>(thread_num / 2)),
+      reactor_thread_pool_(std::make_unique<ThreadPool>(1)),
       work_thread_pool_(std::make_unique<ThreadPool>(thread_num)) {
   LOG_INFO("TcpServer start");
   auto sock_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
@@ -19,15 +19,11 @@ TcpServer::TcpServer(const net::InetAddress &local_addr,
     LOG_FATAL("create socket error");
   }
   acceptor_ = std::make_unique<TcpAcceptor>(*this, sock_fd);
-
-  main_reactor_ = std::make_shared<EventManager>(nullptr, 128);
-  //  thread_pool_.Commit([this]() { main_reactor_->Start(); });
+  main_reactor_ = std::make_shared<EventManager>(nullptr, 2048);
 
   for (size_t i = 0; i < thread_num / 2 - 1; ++i) {
     sub_reactors_.emplace_back(
         std::make_shared<EventManager>(work_thread_pool_));
-    reactor_thread_pool_->Commit(
-        [this, i]() { this->sub_reactors_[i]->Start(); });
   }
   work_thread_pool_->Commit(
       []() { Singleton<timer::TimerManager>::GetInstance()->Tick(); });

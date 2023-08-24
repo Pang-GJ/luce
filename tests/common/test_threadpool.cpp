@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include "luce/common/logger.hpp"
 #include "luce/common/thread_pool.hpp"
