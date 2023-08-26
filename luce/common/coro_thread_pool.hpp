@@ -1,6 +1,6 @@
 #pragma once
 
-#include "luce/coro/task.hpp"
+#include "luce/co/task.hpp"
 #include "luce/common/blocking_queue.hpp"
 #include "luce/common/logger.hpp"
 

@@ -2,7 +2,7 @@
 
 #include "luce/common/noncopyable.h"
 #include "luce/common/thread_pool.hpp"
-#include "luce/coro/task.hpp"
+#include "luce/co/task.hpp"
 #include "luce/net/event_manager.hpp"
 #include "luce/net/tcp/tcp_application.hpp"
 #include "luce/timer/timer.hpp"
