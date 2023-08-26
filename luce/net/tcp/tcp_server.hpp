@@ -38,7 +38,7 @@ class TcpServer : noncopyable {
   void Shutdown();
 
  private:
-  coro::Task<void> AcceptLoop();
+  co::Task<void> AcceptLoop();
 
   std::shared_ptr<EventManager> main_reactor_;
   std::vector<std::shared_ptr<EventManager>>

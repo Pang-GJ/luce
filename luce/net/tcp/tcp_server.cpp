@@ -52,7 +52,7 @@ void TcpServer::Shutdown() {
   // TODO(pgj): more component to shutdown
 }
 
-coro::Task<void> TcpServer::AcceptLoop() {
+co::Task<void> TcpServer::AcceptLoop() {
   for (;;) {
     if (is_shutdown_.load()) {
       LOG_DEBUG("TcpServer::AcceptLoop() shutdown");

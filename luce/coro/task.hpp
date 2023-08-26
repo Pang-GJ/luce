@@ -11,7 +11,7 @@
 #include "luce/common/logger.hpp"
 #include "luce/common/noncopyable.h"
 
-namespace coro {
+namespace co {
 
 template <typename T>
 class Result {
@@ -186,4 +186,4 @@ struct Task : noncopyable {
   CoroHandle handle_;
 };
 
-}  // namespace coro
+}  // namespace co

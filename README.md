@@ -22,7 +22,7 @@ xmake run echo_server
 
 - IO多路复用（epoll）+ MultiReactor
 - C++20协程支持 co_await/co_return
-    - 简单使用coro::Task<>即可令函数成为协程
+    - 简单使用co::Task<>即可令函数成为协程
 - 线程池
 - EventManager/Reactor
 - TcpServer/TcpAcceptor/TcpConnection/TcpApplication
@@ -39,10 +39,10 @@ xmake run echo_server
 具体来说要实现三个函数：
 
 ```cpp
- virtual coro::Task<> OnRequest(TcpConnectionPtr conn,
+ virtual co::Task<> OnRequest(TcpConnectionPtr conn,
                                      TcpServer &server) = 0;
- virtual coro::Task<> OnOpen(TcpConnectionPtr conn) = 0;
- virtual coro::Task<> OnClose(TcpConnectionPtr conn) = 0;
+ virtual co::Task<> OnOpen(TcpConnectionPtr conn) = 0;
+ virtual co::Task<> OnClose(TcpConnectionPtr conn) = 0;
 ```
 
 `OnRequest`表示请求到来时的回调（已经使用协程尽量减少回调的使用，但总有一些不好去除的回调，如果你有更好的想法，欢迎跟我讨论）。  

@@ -15,10 +15,10 @@ class TcpApplication {
  public:
   TcpApplication() = default;
 
-  coro::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer &server);
+  co::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer &server);
 
  protected:
-  virtual coro::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) = 0;
+  virtual co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) = 0;
 
  private:
   std::mutex mtx_;

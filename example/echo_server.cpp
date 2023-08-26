@@ -7,7 +7,7 @@
 
 class EchoServer : public net::TcpApplication {
  private:
-  coro::Task<> OnRequest(net::TcpConnectionPtr conn,
+  co::Task<> OnRequest(net::TcpConnectionPtr conn,
                          net::TcpServer &server) override {
     while (true) {
       char buffer[512] = {0};

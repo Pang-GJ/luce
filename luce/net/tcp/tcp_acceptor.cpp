@@ -14,7 +14,7 @@ TcpAcceptor::TcpAcceptor(TcpServer &server, int sock_fd) : server_(server) {
   LOG_INFO("init sockfd: {}", socket_->GetFd());
 }
 
-coro::Task<TcpConnectionPtr> TcpAcceptor::accept() {
+co::Task<TcpConnectionPtr> TcpAcceptor::accept() {
   int peer_fd = co_await AcceptAwaiter{this};
   if (peer_fd == -1) {
     co_return nullptr;

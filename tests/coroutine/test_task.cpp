@@ -4,7 +4,7 @@
 #include <thread>
 #include "luce/coro/task.hpp"
 
-coro::Task<int> simple_task2() {
+co::Task<int> simple_task2() {
   fmt::print("task 2 start...\n");
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(1s);
@@ -12,7 +12,7 @@ coro::Task<int> simple_task2() {
   co_return 2;
 }
 
-coro::Task<int> simple_task3() {
+co::Task<int> simple_task3() {
   fmt::print("task 3 start...\n");
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
@@ -20,7 +20,7 @@ coro::Task<int> simple_task3() {
   co_return 3;
 }
 
-coro::Task<int> simple_task() {
+co::Task<int> simple_task() {
   fmt::print("task start...\n");
   fmt::print("waiting for result2...\n");
   auto result2 = co_await simple_task2();
@@ -30,7 +30,7 @@ coro::Task<int> simple_task() {
   co_return 1 + result2 + result3;
 }
 
-coro::Task<int> ans() { co_return 42; }
+co::Task<int> ans() { co_return 42; }
 
 int main(int argc, char *argv[]) {
   auto task = simple_task();

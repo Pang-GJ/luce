@@ -12,7 +12,7 @@
 
 namespace net::http {
 
-coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
+co::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
   for (;;) {
     char buffer[MAX_REQUEST_SIZE] = {0};
     auto timer_id =
@@ -71,7 +71,7 @@ coro::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
   co_return;
 }
 
-coro::Task<> HttpServer::SendFile(std::string_view path, RequestPtr request,
+co::Task<> HttpServer::SendFile(std::string_view path, RequestPtr request,
                                   ResponsePtr response, TcpConnectionPtr conn) {
   response->SetHeader("Content-Type:", response->GetFileType(path));
   auto file_size = FileSize(path);
@@ -98,7 +98,7 @@ coro::Task<> HttpServer::SendFile(std::string_view path, RequestPtr request,
   close(fd);
 }
 
-coro::Task<> HttpServer::SendResponse(ResponsePtr response,
+co::Task<> HttpServer::SendResponse(ResponsePtr response,
                                       TcpConnectionPtr conn) {
   // 先发送请求头
   auto total_size = response->GetData().size();
@@ -115,7 +115,7 @@ coro::Task<> HttpServer::SendResponse(ResponsePtr response,
   response->Clear();
 }
 
-coro::Task<> HttpServer::ServerHTTP(TcpConnectionPtr conn,
+co::Task<> HttpServer::ServerHTTP(TcpConnectionPtr conn,
                                     RequestPtr http_request,
                                     ResponsePtr http_response) {
   router_.Handle(std::make_shared<HttpContext>(http_request, http_response));

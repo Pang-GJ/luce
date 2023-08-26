@@ -41,14 +41,14 @@ class HttpServer : public TcpApplication {
   }
 
  private:
-  coro::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override;
+  co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override;
 
-  coro::Task<> ServerHTTP(TcpConnectionPtr conn, RequestPtr http_request,
+  co::Task<> ServerHTTP(TcpConnectionPtr conn, RequestPtr http_request,
                           ResponsePtr http_response);
 
-  coro::Task<> SendFile(std::string_view path, RequestPtr request,
+  co::Task<> SendFile(std::string_view path, RequestPtr request,
                         ResponsePtr response, TcpConnectionPtr conn);
-  coro::Task<> SendResponse(ResponsePtr response, TcpConnectionPtr conn);
+  co::Task<> SendResponse(ResponsePtr response, TcpConnectionPtr conn);
 
   Router router_;  // method-url -> handle
   std::string static_path_;

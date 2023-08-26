@@ -10,11 +10,9 @@ class TcpAcceptor {
  public:
   explicit TcpAcceptor(TcpServer &server, int sock_fd);
 
-  ~TcpAcceptor() {
-    LOG_INFO("delete acceptor");
-  }
+  ~TcpAcceptor() { LOG_INFO("delete acceptor"); }
 
-  auto accept() -> coro::Task<TcpConnectionPtr>;
+  co::Task<TcpConnectionPtr> accept();
 
   auto GetEventManager() const -> EventManager & {
     return server_.GetMainReactor();
