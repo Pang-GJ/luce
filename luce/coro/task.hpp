@@ -4,15 +4,17 @@
 #include <coroutine>
 #include <exception>
 #include <future>
+#include <memory>
+#include <semaphore>
 #include <utility>
 
 #include "luce/common/logger.hpp"
+#include "luce/common/noncopyable.h"
 
 namespace coro {
 
-// make ValueReturner to not write PromiseBase<void>
 template <typename T>
-class ValueReturner {
+class Result {
  public:
   void return_value(T &&value) { value_ = T(std::move(value)); }
   void return_value(const T &value) { value_ = value; }
@@ -30,125 +32,158 @@ class ValueReturner {
   void set_value(T &&value) { value_ = T(std::move(value)); }
   void set_value(const T &value) { value_ = value; }
 
-  auto GetResult() -> T { return value_; }
+  T result() { return value_; }
+
   T value_;
 };
 
 template <>
-class ValueReturner<void> {
+class Result<void> {
  public:
   void return_void() {}
-
-  void GetResult() {}
+  void result() {}
 };
 
 template <typename T, typename CoroHandle>
-struct PromiseBase : public ValueReturner<T> {
-  auto initial_suspend() -> std::suspend_never { return {}; }
+struct PromiseBase : public Result<T> {
+  std::suspend_always initial_suspend() { return {}; }
 
-  auto final_suspend() noexcept {
+  decltype(auto) final_suspend() noexcept {
     struct Awaiter {
-      std::coroutine_handle<> release_detached_;
+      bool await_ready() noexcept { return false; }
 
-      auto await_ready() noexcept -> bool { return false; }
-
-      auto await_suspend(CoroHandle suspended_coro) noexcept
-          -> std::coroutine_handle<> {
+      std::coroutine_handle<> await_suspend(
+          CoroHandle suspended_coro) noexcept {
         // let coroutine_handle go out, it comes from await_suspend
-        if (suspended_coro.promise().continuation_) {
-          return suspended_coro.promise().continuation_;
+        auto &promise = suspended_coro.promise();
+        std::coroutine_handle<> continuation = promise.continuation_;
+        if (promise.is_detached_) {
+          LOG_DEBUG("suspended_coro.destroy();");
+          suspended_coro.destroy();
         }
-
-        if (release_detached_) {
-          release_detached_.destroy();
-        }
-        return std::noop_coroutine();
+        return continuation;
       }
 
-      void await_resume() noexcept {}
+      // won't never resume
+      constexpr void await_resume() const noexcept {}
     };
-
-    return Awaiter{release_detached_};
+    return Awaiter{};
   }
 
-  std::coroutine_handle<> continuation_;
-  std::coroutine_handle<> release_detached_;
+  void set_continuation(std::coroutine_handle<> continuation) {
+    continuation_ = continuation;
+  }
+
+  void detach() noexcept { is_detached_ = true; }
+
+  std::coroutine_handle<> continuation_{std::noop_coroutine()};
+  bool is_detached_{false};
 };
 
 template <typename T = void>
-struct Task {
+struct Task : noncopyable {
   struct promise_type
       : public PromiseBase<T, std::coroutine_handle<promise_type>> {
     promise_type() = default;
 
-    auto get_return_object() -> Task<T> {
+    Task<T> get_return_object() {
       return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
     }
 
     void unhandled_exception() { LOG_FATAL("unhandled exception"); }
-
-    void SetDetachedTask(std::coroutine_handle<promise_type> handle) {
-      this->release_detached_ = handle;
-    }
   };
 
-  struct TaskAwaiter {
-    explicit TaskAwaiter(std::coroutine_handle<promise_type> handle)
+  struct TaskAwaiterBase {
+    explicit TaskAwaiterBase(std::coroutine_handle<promise_type> handle)
         : handle_(handle) {}
 
-    auto await_ready() -> bool { return handle_.done(); }
-
-    void await_suspend(std::coroutine_handle<> continuation) noexcept {
-      handle_.promise().continuation_ = continuation;
+    bool await_ready() {
+      bool res = !handle_ || handle_.done();
+      LOG_DEBUG("TaskAwaitter await_ready: {}", res);
+      return res;
     }
 
-    auto await_resume() { return handle_.promise().GetResult(); }
+    // void await_suspend(std::coroutine_handle<> continuation) noexcept {
+    //   handle_.promise().continuation_ = continuation;
+    // }
+    std::coroutine_handle<> await_suspend(
+        std::coroutine_handle<> continuation) noexcept {
+      // handle_.promise().continuation_ = continuation;
+      LOG_DEBUG("set continuation");
+      handle_.promise().set_continuation(continuation);
+      return handle_;
+    }
 
     std::coroutine_handle<promise_type> handle_;
   };
 
   using CoroHandle = std::coroutine_handle<promise_type>;
 
-  explicit Task(CoroHandle handle) : handle_(handle) {}
-
-  Task(Task &&other) noexcept
-      : handle_(std::exchange(other.handle_, nullptr)),
-        detached_(std::exchange(other.detached_, true)) {}
-
-  Task(const Task &other) noexcept
-      : handle_(other.handle_), detached_(other.detached_) {}
-
-  Task &operator=(const Task &other) noexcept {
-    handle_ = other.handle_;
-    detached_ = other.detached_;
+  explicit Task(CoroHandle handle) : handle_(handle) {
+    LOG_DEBUG("new Task: {}", handle.address());
   }
 
+  Task(Task &&other) noexcept
+      : handle_(std::exchange(other.handle_, nullptr)) {}
+
   ~Task() {
-    if (!detached_) {
-      if (!handle_.done()) {
-        handle_.promise().SetDetachedTask(handle_);
-      } else {
-        handle_.destroy();
-      }
+    LOG_DEBUG("~Task: {}", handle_.address());
+    if (handle_) {
+      handle_.destroy();
     }
   }
 
-  auto operator co_await() const { return TaskAwaiter(handle_); }
+  auto operator co_await() const & noexcept {
+    struct Awaiter : TaskAwaiterBase {
+      using TaskAwaiterBase::TaskAwaiterBase;
 
-  auto GetResult() const -> T { return handle_.promise().GetResult(); }
+      decltype(auto) await_resume() { return this->handle_.promise().result(); }
+    };
+    return Awaiter(handle_);
+  }
+
+  auto operator co_await() const && noexcept {
+    struct Awaiter : TaskAwaiterBase {
+      using TaskAwaiterBase::TaskAwaiterBase;
+
+      decltype(auto) await_resume() {
+        return std::move(this->handle_.promise()).result();
+      }
+    };
+    return Awaiter(handle_);
+  }
+
+  bool ready() const noexcept { return !handle_ || handle_.done(); }
+
+  T result() const { return handle_.promise().result(); }
+
+  // NOTE(pgj): 这里的实现比较粗糙，只是为了能够在 main 函数执行一个 coroutine
+  T run() {
+    if (ready()) {
+      return result();
+    }
+    auto handle = handle_;
+    detach();
+    handle.resume();
+    return handle.promise().result();
+  }
 
   void resume() { handle_.resume(); }
 
-  explicit operator CoroHandle() const { return handle_; }
+  // explicit operator CoroHandle() const { return handle_; }
 
-  void Detach() {
-    assert(!detached_);
-    handle_.promise().SetDetachedTask(handle_);
-    detached_ = true;
+  CoroHandle get_handle() noexcept { return handle_; }
+
+  void detach() noexcept {
+    handle_.promise().detach();
+    handle_ = nullptr;
+  }
+
+  friend void swap(Task &lhs, Task &rhs) noexcept {
+    std::swap(lhs.handle_, rhs.handle_);
   }
 
   CoroHandle handle_;
-  bool detached_{};
 };
 
 }  // namespace coro
