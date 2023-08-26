@@ -5,7 +5,7 @@
 #include "luce/codec/tinypb_protocol.h"
 namespace codec {
 
-class TinyPBCoder : AbstractCoder {
+class TinyPBCoder : public AbstractCoder {
  public:
   TinyPBCoder() = default;
   ~TinyPBCoder() override = default;

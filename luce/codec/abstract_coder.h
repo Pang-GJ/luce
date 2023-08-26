@@ -14,7 +14,7 @@ class AbstractCoder {
                       Buffer *out_buffer) = 0;
 
   virtual void Decode(const Buffer &in_buffer,
-                      AbstractProtocol::Ptr *out_messages);
+                      AbstractProtocol::Ptr *out_messages) = 0;
 };
 
 }  // namespace codec

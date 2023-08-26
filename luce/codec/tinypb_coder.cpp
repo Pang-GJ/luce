@@ -141,23 +141,23 @@ const char *TinyPBCoder::EncodeTinyPB(
   std::memcpy(tmp, &pk_len_net, sizeof(pk_len_net));
   tmp += sizeof(pk_len_net);
 
-  int msg_id_len = message->msg_id.length();
+  int msg_id_len = static_cast<int>(message->msg_id.length());
   int32_t msg_id_len_net = net::GetNetInt32(msg_id_len);
   std::memcpy(tmp, &msg_id_len_net, sizeof(msg_id_len_net));
   tmp += sizeof(msg_id_len_net);
 
   if (!message->msg_id.empty()) {
-    std::memcpy(tmp, &(message->msg_id[0]), msg_id_len);
+    std::memcpy(tmp, message->msg_id.data(), msg_id_len);
     tmp += msg_id_len;
   }
 
-  int method_name_len = message->method_name.length();
+  int method_name_len = static_cast<int>(message->method_name.length());
   int32_t method_name_len_net = net::GetNetInt32(method_name_len);
   std::memcpy(tmp, &method_name_len_net, sizeof(method_name_len_net));
   tmp += sizeof(method_name_len_net);
 
   if (!message->method_name.empty()) {
-    std::memcpy(tmp, &(message->method_name[0]), method_name_len);
+    std::memcpy(tmp, message->method_name.data(), method_name_len);
     tmp += method_name_len;
   }
 
@@ -165,18 +165,18 @@ const char *TinyPBCoder::EncodeTinyPB(
   std::memcpy(tmp, &err_code_net, sizeof(err_code_net));
   tmp += sizeof(err_code_net);
 
-  int err_info_len = message->err_info.length();
+  int err_info_len = static_cast<int>(message->err_info.length());
   int32_t err_info_len_net = net::GetNetInt32(err_info_len);
   std::memcpy(tmp, &err_info_len_net, sizeof(err_info_len_net));
   tmp += sizeof(err_info_len_net);
 
   if (!message->err_info.empty()) {
-    std::memcpy(tmp, &(message->err_info[0]), err_info_len);
+    std::memcpy(tmp, message->err_info.data(), err_info_len);
     tmp += err_info_len;
   }
 
   if (!message->pb_data.empty()) {
-    std::memcpy(tmp, &(message->pb_data[0]), message->pb_data.length());
+    std::memcpy(tmp, message->pb_data.data(), message->pb_data.length());
     tmp += message->pb_data.length();
   }
 
