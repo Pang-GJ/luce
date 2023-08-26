@@ -6,7 +6,8 @@ namespace net {
 
 coro::Task<> TcpApplication::HandleRequest(TcpConnectionPtr conn,
                                            TcpServer &server) {
-  co_await OnRequest(conn, server);
+  LOG_DEBUG("handing request");
+  co_return co_await OnRequest(conn, server);
 }
 
 }  // namespace net

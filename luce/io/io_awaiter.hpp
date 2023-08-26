@@ -28,7 +28,7 @@ class ReadAwaiter {
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
-    LOG_DEBUG("recv suspend");
+    LOG_DEBUG("await_suspend recv");
     if (!conn_->IsClosed()) {
       conn_->GetEventManager().AddRecv(conn_->GetSocket(), handle);
     }
@@ -94,17 +94,17 @@ class AcceptAwaiter {
  public:
   explicit AcceptAwaiter(TcpAcceptor *acceptor) : acceptor_(acceptor) {}
 
-  auto await_ready() -> bool {
+  bool await_ready() {
     conn_fd_ = do_accept(acceptor_->GetSocket()->GetFd());
     return conn_fd_ >= 0;
   }
 
   void await_suspend(std::coroutine_handle<> handle) {
-    LOG_DEBUG("suspend accept");
+    LOG_DEBUG("await_suspend accept, handle: {}", handle.address());
     acceptor_->GetEventManager().AddRecv(acceptor_->GetSocket(), handle);
   }
 
-  auto await_resume() -> int {
+  int await_resume() {
     LOG_DEBUG("resume accept");
     acceptor_->GetEventManager().DelRecv(acceptor_->GetSocket());
     if (conn_fd_ < 0) {

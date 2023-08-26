@@ -22,8 +22,8 @@ coro::Task<int> simple_task3() {
 
 coro::Task<int> simple_task() {
   fmt::print("task start...\n");
-  auto result2 = co_await simple_task2();
   fmt::print("waiting for result2...\n");
+  auto result2 = co_await simple_task2();
   fmt::print("result from task2: {}\n", result2);
   auto result3 = co_await simple_task3();
   fmt::print("result from task3: {}\n", result3);
@@ -34,6 +34,6 @@ coro::Task<int> ans() { co_return 42; }
 
 int main(int argc, char *argv[]) {
   auto task = simple_task();
-  fmt::print("the result of simple_task: {}\n", task.GetResult());
+  fmt::print("the result of simple_task: {}\n", task.run());
   return 0;
 }

@@ -1,4 +1,5 @@
 #include "luce/net/tcp/tcp_server.hpp"
+#include "luce/common/logger.hpp"
 #include "luce/common/singleton.hpp"
 #include "luce/common/thread_pool.hpp"
 #include "luce/net/tcp/tcp_acceptor.hpp"
@@ -31,7 +32,10 @@ TcpServer::TcpServer(const net::InetAddress &local_addr,
 
 void TcpServer::Start(bool async_start) {
   if (async_start) {
-    reactor_thread_pool_->Commit([&]() { AcceptLoop(); });
+    reactor_thread_pool_->Commit([&]() {
+      AcceptLoop().run();
+      LOG_INFO("AcceptLoop().await() done");
+    });
   }
   main_reactor_->Start();
 }
@@ -51,12 +55,13 @@ void TcpServer::Shutdown() {
 coro::Task<void> TcpServer::AcceptLoop() {
   for (;;) {
     if (is_shutdown_.load()) {
+      LOG_DEBUG("TcpServer::AcceptLoop() shutdown");
       break;
     }
     auto conn = co_await acceptor_->accept();
     if (conn != nullptr) {
       work_thread_pool_->Commit(
-          [this, conn]() { this->app_->HandleRequest(conn, *this); });
+          [this, conn]() { this->app_->HandleRequest(conn, *this).run(); });
     }
   }
 }

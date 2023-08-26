@@ -45,7 +45,7 @@ void EventManager::Start() {
       // TODO(pgj): check more situation
       if ((events_[i].events & EPOLLIN) != 0U) {
         auto handle = static_cast<Socket::Handle *>(events_[i].data.ptr);
-        auto& recv_coro = handle->recv_coro;
+        auto &recv_coro = handle->recv_coro;
         LOG_DEBUG("epoll_await resume recv handle");
         if (work_thread_pool_) {
           work_thread_pool_->Commit([&]() { recv_coro.resume(); });
@@ -55,7 +55,7 @@ void EventManager::Start() {
 
       } else if ((events_[i].events & EPOLLOUT) != 0U) {
         auto handle = static_cast<Socket::Handle *>(events_[i].data.ptr);
-        auto& send_coro = handle->send_coro;
+        auto &send_coro = handle->send_coro;
         LOG_DEBUG("epoll_await resume send handle");
         if (work_thread_pool_) {
           work_thread_pool_->Commit([&]() { send_coro.resume(); });
