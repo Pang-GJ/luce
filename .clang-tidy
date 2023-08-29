@@ -49,6 +49,7 @@ Checks:     '
             -readability-redundant-access-specifiers,
             -readability-function-cognitive-complexity,
             -google-readability-casting,
+            -bugprone-narrowing-conversions,
             '
 # TODO(WAN): To be enabled in Fall 2020.
 #CheckOptions:
