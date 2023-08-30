@@ -2,10 +2,8 @@
 
 #include <cassert>
 #include <coroutine>
-#include <exception>
-#include <future>
+#include <cstdint>
 #include <memory>
-#include <semaphore>
 #include <utility>
 
 #include "luce/common/logger.hpp"
@@ -74,10 +72,13 @@ struct PromiseBase : public Result<T> {
     continuation_ = continuation;
   }
 
+  void set_thrd(int32_t thrd_id) { thrd_id_ = thrd_id; }
+
   void detach() noexcept { is_detached_ = true; }
 
   std::coroutine_handle<> continuation_{std::noop_coroutine()};
   bool is_detached_{false};
+  int32_t thrd_id_{-1};
 };
 
 template <typename T = void>
@@ -103,12 +104,8 @@ struct Task : noncopyable {
       return res;
     }
 
-    // void await_suspend(std::coroutine_handle<> continuation) noexcept {
-    //   handle_.promise().continuation_ = continuation;
-    // }
     std::coroutine_handle<> await_suspend(
         std::coroutine_handle<> continuation) noexcept {
-      // handle_.promise().continuation_ = continuation;
       LOG_DEBUG("set continuation");
       handle_.promise().set_continuation(continuation);
       return handle_;

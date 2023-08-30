@@ -2,7 +2,10 @@
 #include <fmt/core.h>
 #include <iostream>
 #include <thread>
+#include "luce/co/scheduler.h"
 #include "luce/co/task.hpp"
+
+using co::co_spawn;
 
 co::Task<int> simple_task2() {
   fmt::print("task 2 start...\n");
@@ -30,10 +33,18 @@ co::Task<int> simple_task() {
   co_return 1 + result2 + result3;
 }
 
+co::Task<> co_main() {
+  auto res = co_await simple_task();
+  fmt::print("the result of simple_task: {}\n", res);
+}
+
 co::Task<int> ans() { co_return 42; }
 
 int main(int argc, char *argv[]) {
-  auto task = simple_task();
-  fmt::print("the result of simple_task: {}\n", task.run());
+  co_spawn([]() -> co::Task<> {
+    auto res = co_await simple_task();
+    fmt::print("the result of simple_task: {}\n", res);
+  }());
+  co_spawn(co_main());
   return 0;
 }
