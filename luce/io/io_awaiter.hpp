@@ -1,9 +1,14 @@
 #pragma once
 
 #include <arpa/inet.h>
+#include <asm-generic/errno-base.h>
+#include <asm-generic/errno.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <cerrno>
 #include <cstring>
 
+#include "luce/co/task.hpp"
 #include "luce/common/logger.hpp"
 #include "luce/net/event_manager.hpp"
 #include "luce/net/socket.hpp"
@@ -12,10 +17,14 @@
 
 namespace net {
 
+namespace detail {
+
+constexpr int HEADER_SIZE = 4;
+
 // example only
-class ReadAwaiter {
+class ReadInnerAwaiter {
  public:
-  ReadAwaiter(TcpConnection *conn, void *buffer, size_t len)
+  ReadInnerAwaiter(TcpConnection *conn, void *buffer, size_t len)
       : conn_(conn), buffer_(buffer), len_(len) {}
 
   // if IO is ready (recv_ > 0), then we should not suspend
@@ -52,9 +61,9 @@ class ReadAwaiter {
   size_t len_;
 };
 
-class WriteAwaiter {
+class WriteInnerAwaiter {
  public:
-  WriteAwaiter(TcpConnection *conn, void *buffer, size_t len)
+  WriteInnerAwaiter(TcpConnection *conn, const void *buffer, size_t len)
       : conn_(conn), buffer_(buffer), len_(len) {}
 
   auto await_ready() -> bool {
@@ -85,10 +94,12 @@ class WriteAwaiter {
 
  private:
   TcpConnection *conn_;
-  void *buffer_;
+  const void *buffer_;
   ssize_t send_{0};
   size_t len_;
 };
+
+}  // namespace detail
 
 class AcceptAwaiter {
  public:
@@ -127,5 +138,13 @@ class AcceptAwaiter {
   TcpAcceptor *acceptor_;
   int conn_fd_{-1};  // the coming connection fd
 };
+
+co::Task<size_t> AsyncRead(TcpConnection *conn, IOBuffer &buffer);
+
+co::Task<size_t> AsyncWrite(TcpConnection *conn, const IOBuffer &buffer);
+
+co::Task<bool> AsyncReadPacket(TcpConnection *conn, IOBuffer &buffer);
+
+co::Task<bool> AsyncWritePacket(TcpConnection *conn, const IOBuffer &buffer);
 
 }  // namespace net

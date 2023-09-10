@@ -34,7 +34,7 @@ class Serializer {
 
   void write_raw_data(char *in, int len) {
     stream_buf_.input(in, len);
-    stream_buf_.offset(len);
+    // stream_buf_.offset(len);
   }
 
   const char *current() const { return stream_buf_.current(); }

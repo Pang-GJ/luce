@@ -50,7 +50,7 @@ inline ThreadPool::ThreadPool(size_t thread_num)
   auto worker = [this](size_t id) {
     while (true) {
       TaskType task{};
-      if (!queues_[id].pop(task)) {
+      if (!queues_[id].pop(&task)) {
         if (stop_) {
           return;
         }

@@ -12,7 +12,7 @@
 namespace net::http {
 
 // 单次最大请求报文大小限制 64K
-#define MAX_REQUEST_SIZE (1024 * 64)
+constexpr int MAX_REQUEST_SIZE = 1024 * 64;
 
 struct HttpRequest : noncopyable {
   void Parse(std::string_view data);

@@ -68,7 +68,7 @@ void BufPool::AllocPoolMem(MemCap mem_cap, size_t num) {
   // 开辟mem_cap大小的 buf 内存池
   pool_[mem_cap] = new IOBuf(mem_cap);
   if (pool_[mem_cap] == nullptr) {
-    LOG_ERROR("new IOBuf error, target size: {}", mem_cap);
+    // LOG_ERROR("new IOBuf error, target size: {}", mem_cap);
     exit(1);
   }
 
@@ -77,7 +77,7 @@ void BufPool::AllocPoolMem(MemCap mem_cap, size_t num) {
   for (size_t i = 1; i < num; ++i) {
     prev->next = new IOBuf(mem_cap);
     if (prev->next == nullptr) {
-      LOG_ERROR("new IOBuf error, target size: {}", mem_cap);
+      // LOG_ERROR("new IOBuf error, target size: {}", mem_cap);
       exit(1);
     }
     prev = prev->next;

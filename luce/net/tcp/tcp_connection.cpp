@@ -9,7 +9,8 @@
 
 namespace net {
 
-TcpConnection::TcpConnection(std::shared_ptr<Socket> sock, EventManager &event_manager)
+TcpConnection::TcpConnection(std::shared_ptr<Socket> sock,
+                             EventManager &event_manager)
     : event_manager_(event_manager), socket_(std::move(sock)) {}
 
 TcpConnection::~TcpConnection() {
@@ -20,12 +21,24 @@ TcpConnection::~TcpConnection() {
   }
 }
 
-auto TcpConnection::read(void *buffer, std::size_t len) -> ReadAwaiter {
-  return {this, buffer, len};
+co::Task<size_t> TcpConnection::AsyncRead(IOBuffer *buffer) {
+  auto res = co_await ::net::AsyncRead(this, *buffer);
+  co_return res;
 }
 
-auto TcpConnection::write(void *buffer, std::size_t len) -> WriteAwaiter {
-  return {this, buffer, len};
+co::Task<size_t> TcpConnection::AsyncWrite(const IOBuffer &buffer) {
+  auto res = co_await ::net::AsyncWrite(this, buffer);
+  co_return res;
+}
+
+co::Task<bool> TcpConnection::AsyncReadPacket(IOBuffer *buffer) {
+  auto res = co_await ::net::AsyncReadPacket(this, *buffer);
+  co_return res;
+}
+
+co::Task<bool> TcpConnection::AsyncWritePacket(const IOBuffer &buffer) {
+  auto res = co_await ::net::AsyncWritePacket(this, buffer);
+  co_return res;
 }
 
 }  // namespace net

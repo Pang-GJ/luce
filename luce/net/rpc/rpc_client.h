@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
+#include <cstring>
 #include <tuple>
 #include "luce/co/task.hpp"
 #include "luce/codec/serializer.h"
@@ -16,6 +17,7 @@
 #include "luce/net/rpc/rpc_err_code.h"
 #include "luce/net/rpc/rpc_value.h"
 #include "luce/net/tcp/tcp_application.hpp"
+#include "luce/net/tcp/tcp_connection.hpp"
 namespace net::rpc {
 
 class BlockingRpcClient {
@@ -72,18 +74,23 @@ class BlockingRpcClient {
  private:
   template <typename R>
   RpcValue<R> NetCall(codec::Serializer &ds) {
-    char request_buffer[ds.size() + 1];
-    std::memcpy(request_buffer, ds.data(), ds.size());
+    IOBuffer request_buffer(ds.size());
+    std::memcpy(request_buffer.data(), ds.data(), ds.size());
     if (err_code_ != RPC_ERR_RECV_TIMEOUT) {
-      if (!Send(request_buffer, sizeof(request_buffer))) {
+      auto res = WritePacket(request_buffer);
+      if (res != ds.size()) {
         LOG_FATAL("rpc client send error, errno: {}", errno);
       }
     }
 
-    char reply_buffer[MAX_VALUE_SIZE];
-    auto recv_len = Recv(reply_buffer);
+    IOBuffer reply_buffer;
+    auto recv_res = ReadPacket(reply_buffer);
+    if (recv_res < 0) {
+      LOG_ERROR("NetCall get response failed");
+    }
+    LOG_INFO("NetCall recv size: {}", recv_res);
     RpcValue<R> value;
-    if (recv_len == 0) {
+    if (recv_res == 0) {
       err_code_ = RPC_ERR_RECV_TIMEOUT;
       value.err_code = err_code_;
       value.err_msg = "recv timeout";
@@ -91,20 +98,41 @@ class BlockingRpcClient {
     }
     err_code_ = RPC_SUCCECC;
     ds.clear();
-    ds.write_raw_data(reply_buffer, recv_len);
+    ds.write_raw_data(reply_buffer.data(), reply_buffer.size());
     ds.reset();
 
     ds >> value;
     return value;
   }
 
-  bool Send(char *buffer, int total_size) {
-    ssize_t send_size = 0;
-    while (total_size > 0) {
-      auto res = send(client_fd_, reinterpret_cast<void *>(buffer + send_size),
-                      total_size, 0);
+  size_t ReadPacket(IOBuffer &buffer) {
+    char head_buffer[net::detail::HEADER_SIZE];
+    size_t head_recv_size = 0;
+    while (head_recv_size != net::detail::HEADER_SIZE) {
+      auto res = read(client_fd_, head_buffer, net::detail::HEADER_SIZE);
       if (res == 0) {
-        return false;
+        LOG_ERROR("recv head error, server closed");
+      }
+      if (res < 0) {
+        if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
+          continue;
+        }
+        LOG_ERROR("recv head error, errno: {}", errno);
+        return -1;
+      }
+      head_recv_size += res;
+    }
+
+    uint32_t total_read_size = *reinterpret_cast<uint32_t *>(head_buffer);
+    LOG_DEBUG("ReadPacket, total read size: {}", total_read_size);
+    buffer.resize(total_read_size);
+    size_t already_read_size = 0;
+    while (total_read_size != 0) {
+      auto res = ::read(client_fd_, buffer.data() + already_read_size,
+                        total_read_size);
+      if (res == 0) {
+        LOG_WARN("Server cloesd");
+        break;
       }
       if (res < 0) {
         if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -112,83 +140,45 @@ class BlockingRpcClient {
         }
         break;
       }
-      total_size -= res;
-      send_size += res;
+      total_read_size -= res;
+      already_read_size += res;
     }
-    return true;
+    buffer.resize(already_read_size);
+    return already_read_size;
   }
 
-  int Recv(char *buffer) {
-    int recv_size = 0;
-    int res = 0;
-    while (true) {
-      res = recv(client_fd_, buffer + recv_size, 512, 0);
+  size_t WritePacket(const IOBuffer &buffer) {
+    size_t total_write_size = buffer.size();
+    char head_buffer[net::detail::HEADER_SIZE];
+    std::memcpy(head_buffer, reinterpret_cast<char *>(&total_write_size),
+                net::detail::HEADER_SIZE);
+    auto res = write(client_fd_, head_buffer, net::detail::HEADER_SIZE);
+    if (res <= 0) {
+      LOG_ERROR("write head error");
+      return -1;
+    }
+    size_t already_write_size = 0;
+    while (total_write_size != 0) {
+      res = ::write(client_fd_, buffer.data() + already_write_size,
+                    total_write_size);
       if (res == 0) {
+        LOG_WARN("Server cloesd");
         break;
       }
       if (res < 0) {
         if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-          LOG_DEBUG("recv continue");
           continue;
         }
         break;
       }
-      recv_size += res;
+      already_write_size += res;
+      total_write_size -= res;
     }
-    LOG_INFO("client recv size: {}", recv_size);
-    return recv_size;
+    return already_write_size;
   }
 
   int client_fd_{-1};
   int err_code_;
 };
-
-/*/
-class RpcClient : public TcpApplication {
- public:
-  RpcClient() = default;
-  ~RpcClient() = default;
-
-  template <typename R, typename... Params>
-  co::Task<RpcValue<R>> Call(const std::string &name, Params... params) {
-    using args_type = std::tuple<typename std::decay<Params>::type...>;
-    args_type args = std::make_tuple(params...);
-
-    codec::Serializer ds;
-    ds << name;
-    package_params(ds, args);
-    auto res = co_await NetCall<R>(ds);
-    co_return res;
-  }
-
-  template <typename R>
-  co::Task<RpcValue<R>> Call(const std::string &name) {
-    codec::Serializer ds;
-    ds << name;
-    auto res = co_await NetCall<R>(ds);
-    co_return res;
-  }
-
- private:
-  co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override {
-    while (true) {
-    }
-    co_return;
-  }
-
-  co::Task<> SendResponse(TcpConnectionPtr conn, char *buffer, int total_size) {
-    ssize_t send_size = 0;
-    while (total_size > 0) {
-      auto res = co_await conn->write(
-          reinterpret_cast<void *>(buffer + send_size), total_size);
-      if (res <= 0) {
-        break;
-      }
-      total_size -= res;
-      send_size += res;
-    }
-  }
-};
-*/
 
 }  // namespace net::rpc

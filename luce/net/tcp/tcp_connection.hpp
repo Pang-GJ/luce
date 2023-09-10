@@ -1,9 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include "luce/net/socket.hpp"
 
 namespace net {
+
+using IOBuffer = std::vector<char>;
 
 class ReadAwaiter;
 class WriteAwaiter;
@@ -15,9 +18,11 @@ class TcpConnection : noncopyable,
 
   ~TcpConnection();
 
-  auto read(void *buffer, std::size_t len) -> ReadAwaiter;
+  co::Task<size_t> AsyncRead(IOBuffer *buffer);
+  co::Task<size_t> AsyncWrite(const IOBuffer &buffer);
 
-  auto write(void *buffer, std::size_t len) -> WriteAwaiter;
+  co::Task<bool> AsyncReadPacket(IOBuffer *buffer);
+  co::Task<bool> AsyncWritePacket(const IOBuffer &buffer);
 
   auto GetEventManager() const -> EventManager & { return event_manager_; }
 

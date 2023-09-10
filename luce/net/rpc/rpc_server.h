@@ -1,7 +1,6 @@
 #pragma once
 
-#include <asm-generic/errno-base.h>
-#include <asm-generic/errno.h>
+#include <cerrno>
 #include <coroutine>
 #include <cstring>
 #include <functional>
@@ -21,6 +20,7 @@
 #include "luce/net/rpc/rpc_err_code.h"
 #include "luce/net/rpc/rpc_value.h"
 #include "luce/net/tcp/tcp_application.hpp"
+#include "luce/net/tcp/tcp_connection.hpp"
 
 namespace net::rpc {
 
@@ -48,48 +48,54 @@ class RpcServer : public TcpApplication {
  private:
   co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) override {
     while (true) {
-      LOG_INFO("loop start");
-      char buffer[MAX_VALUE_SIZE];
-      bzero(&buffer, MAX_VALUE_SIZE);
-      auto recv_len = co_await conn->read(&buffer, MAX_VALUE_SIZE);
-      if (recv_len < 0) {
-        if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-          continue;
-        }
-        break;
-      }
-      if (recv_len == 0) {
-        break;
+      IOBuffer buffer;
+      auto succ = co_await conn->AsyncReadPacket(&buffer);
+      if (!succ) {
+        LOG_WARN("RpcServer recv error");
+        co_return;
       }
 
-      StreamBuffer stream_buffer(buffer, recv_len);
+      StreamBuffer stream_buffer(buffer.data(), buffer.size());
       codec::Serializer ds(stream_buffer);
 
       std::string func_name;
       ds >> func_name;
-      // codec::Serializer r;
       codec::Serializer *r =
           this->Call_(func_name, ds.current(), ds.size() - func_name.size());
       LOG_DEBUG("res: {}, size: {}", std::string(r->data()), r->size());
 
-      // LOG_DEBUG("write buffer: {}, len: {}", std::string(write_buffer),
-      // strlen(write_buffer));
-      if (!Send(conn->GetSocket()->GetFd(), r->data(), r->size())) {
+      buffer.resize(r->size());
+      std::memcpy(buffer.data(), r->data(), r->size());
+      RpcValue<int> val;
+      (*r) >> val;
+      LOG_INFO("val: {}", val.val());
+      auto write_size = WritePacket(conn->GetSocket()->GetFd(), buffer);
+      if (write_size != r->size()) {
         LOG_ERROR("rpc server send response error");
       }
       // co_await SendResponse(conn, r);
       delete r;
-      LOG_INFO("loop end");
     }
+    LOG_INFO("RpcServer OnRequest end");
     co_return;
   }
 
-  bool Send(int client_fd, const char *buffer, int total_size) {
-    ssize_t send_size = 0;
-    while (total_size > 0) {
-      auto res = ::write(client_fd, buffer + send_size, total_size);
+  size_t WritePacket(int fd, const IOBuffer &buffer) {
+    size_t total_write_size = buffer.size();
+    char head_buffer[net::detail::HEADER_SIZE];
+    std::memcpy(head_buffer, reinterpret_cast<char *>(&total_write_size),
+                net::detail::HEADER_SIZE);
+    auto res = write(fd, head_buffer, net::detail::HEADER_SIZE);
+    if (res <= 0) {
+      LOG_ERROR("write head error");
+      return -1;
+    }
+    size_t already_write_size = 0;
+    while (total_write_size != 0) {
+      res = ::write(fd, buffer.data() + already_write_size, total_write_size);
       if (res == 0) {
-        return false;
+        LOG_WARN("Server cloesd");
+        break;
       }
       if (res < 0) {
         if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -97,31 +103,19 @@ class RpcServer : public TcpApplication {
         }
         break;
       }
-      total_size -= res;
-      send_size += res;
+      already_write_size += res;
+      total_write_size -= res;
     }
-    return true;
+    return already_write_size;
   }
 
   co::Task<> SendResponse(TcpConnectionPtr conn, codec::Serializer *r) {
+    IOBuffer buffer(r->size());
     auto total_size = r->size();
-    char buffer[total_size];
-    std::memcpy(buffer, r->data(), total_size);
-    ssize_t send_size = 0;
-    while (total_size > 0) {
-      auto res = co_await conn->write((buffer + send_size), total_size);
-      if (res == 0) {
-        break;
-      }
-      if (res < 0) {
-        if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-          continue;
-        }
-        break;
-      }
-
-      total_size -= res;
-      send_size += res;
+    std::memcpy(buffer.data(), r->data(), total_size);
+    auto succ = co_await conn->AsyncWritePacket(buffer);
+    if (!succ) {
+      LOG_ERROR("RpcServer SendResponse error");
     }
     co_return;
   }
@@ -172,7 +166,7 @@ class RpcServer : public TcpApplication {
     auto ff = [=](Params... params) -> R { return (s->*func)(params...); };
     return_type res = call_helper<R>(ff, args);
 
-    RpcValue<R> value;
+    RpcValue<return_type> value;
     value.err_code = RPC_SUCCECC;
     value.detail_value = res;
     (*pr) << value;
