@@ -18,17 +18,6 @@ struct type_xx<void> {
   using type = int8_t;
 };
 
-template <typename Tuple, std::size_t... Index>
-void package_params_impl(codec::Serializer &s, const Tuple &t,
-                         std::index_sequence<Index...> index_sequence) {
-  std::initializer_list<int>{((s << std::get<Index>(t)), 0)...};
-}
-
-template <typename... Args>
-void package_params(codec::Serializer &s, const std::tuple<Args...> &t) {
-  package_params_impl(s, t, std::index_sequence_for<Args...>{});
-}
-
 // 用tuple做参数调用函数模板类
 template <typename Function, typename Tuple, std::size_t... Index>
 decltype(auto) invoke_impl(Function &&func, Tuple &&t,

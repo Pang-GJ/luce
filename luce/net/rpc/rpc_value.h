@@ -9,18 +9,18 @@ namespace net::rpc {
 constexpr int MAX_VALUE_SIZE = 1024 * 64;
 
 template <typename T>
-struct RpcValue {
+struct RpcResponse {
   using type = typename type_xx<T>::type;
   using msg_type = std::string;
   using code_type = uint16_t;
 
-  RpcValue() = default;
-  ~RpcValue() = default;
+  RpcResponse() = default;
+  ~RpcResponse() = default;
 
   T val() const { return detail_value; }
 
   friend codec::Serializer &operator>>(codec::Serializer &in,
-                                       RpcValue<T> *value) {
+                                       RpcResponse<T> *value) {
     in >> value->err_code >> value->err_msg;
     if (value->err_code == 0) {
       in >> value->detail_value;
@@ -29,9 +29,21 @@ struct RpcValue {
   }
 
   friend codec::Serializer &operator<<(codec::Serializer &out,
-                                       const RpcValue<T> &value) {
+                                       const RpcResponse<T> &value) {
     out << value.err_code << value.err_msg << value.detail_value;
     return out;
+  }
+
+  void serialize(codec::Serializer *serializer) const {
+    serializer->serialize(err_code);
+    serializer->serialize(err_msg);
+    serializer->serialize(detail_value);
+  }
+
+  void deserialize(codec::Serializer *serializer) {
+    serializer->deserialize(&err_code);
+    serializer->deserialize(&err_msg);
+    serializer->deserialize(&detail_value);
   }
 
   code_type err_code{0};

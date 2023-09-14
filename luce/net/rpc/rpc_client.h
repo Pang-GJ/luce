@@ -35,7 +35,6 @@ class BlockingRpcClient {
       int res = connect(client_fd_, (struct sockaddr *)&server_addr,
                         sizeof(server_addr));
       if (res == 0) {
-        LOG_DEBUG("blocking rpc client connect success.");
         break;
       }
       if (res < 0) {
@@ -54,31 +53,32 @@ class BlockingRpcClient {
   }
 
   template <typename R, typename... Params>
-  RpcValue<R> Call(const std::string &name, Params... params) {
+  RpcResponse<R> Call(const std::string &name, Params... params) {
     using args_type = std::tuple<typename std::decay<Params>::type...>;
     args_type args = std::make_tuple(params...);
 
-    codec::Serializer ds;
-    ds << name;
-    package_params(ds, args);
-    return NetCall<R>(ds);
+    codec::Serializer serializer;
+    serializer.serialize(name);
+    serializer.serialize(args);
+    return NetCall<R>(serializer);
   }
 
   template <typename R>
-  RpcValue<R> Call(const std::string &name) {
-    codec::Serializer ds;
-    ds << name;
-    return NetCall<R>(ds);
+  RpcResponse<R> Call(const std::string &name) {
+    codec::Serializer serializer;
+    serializer.serialize(name);
+    return NetCall<R>(serializer);
   }
 
  private:
   template <typename R>
-  RpcValue<R> NetCall(codec::Serializer &ds) {
-    IOBuffer request_buffer(ds.size());
-    std::memcpy(request_buffer.data(), ds.data(), ds.size());
+  RpcResponse<R> NetCall(codec::Serializer &serializer) {
+    const auto serialized_data = serializer.str();
+
+    IOBuffer request_buffer(serialized_data.cbegin(), serialized_data.cend());
     if (err_code_ != RPC_ERR_RECV_TIMEOUT) {
       auto res = WritePacket(request_buffer);
-      if (res != ds.size()) {
+      if (res != serializer.size()) {
         LOG_FATAL("rpc client send error, errno: {}", errno);
       }
     }
@@ -88,8 +88,8 @@ class BlockingRpcClient {
     if (recv_res < 0) {
       LOG_ERROR("NetCall get response failed");
     }
-    LOG_INFO("NetCall recv size: {}", recv_res);
-    RpcValue<R> value;
+
+    RpcResponse<R> value;
     if (recv_res == 0) {
       err_code_ = RPC_ERR_RECV_TIMEOUT;
       value.err_code = err_code_;
@@ -97,11 +97,10 @@ class BlockingRpcClient {
       return value;
     }
     err_code_ = RPC_SUCCECC;
-    ds.clear();
-    ds.write_raw_data(reply_buffer.data(), reply_buffer.size());
-    ds.reset();
 
-    ds >> value;
+    codec::Serializer response_serializer(reply_buffer.begin(),
+                                          reply_buffer.end());
+    response_serializer.deserialize(&value);
     return value;
   }
 
@@ -124,7 +123,6 @@ class BlockingRpcClient {
     }
 
     uint32_t total_read_size = *reinterpret_cast<uint32_t *>(head_buffer);
-    LOG_DEBUG("ReadPacket, total read size: {}", total_read_size);
     buffer.resize(total_read_size);
     size_t already_read_size = 0;
     while (total_read_size != 0) {
@@ -149,6 +147,7 @@ class BlockingRpcClient {
 
   size_t WritePacket(const IOBuffer &buffer) {
     size_t total_write_size = buffer.size();
+
     char head_buffer[net::detail::HEADER_SIZE];
     std::memcpy(head_buffer, reinterpret_cast<char *>(&total_write_size),
                 net::detail::HEADER_SIZE);

@@ -27,7 +27,7 @@ namespace net::rpc {
 class RpcServer : public TcpApplication {
  public:
   using HandleFunc =
-      std::function<void(codec::Serializer *, const char *, int)>;
+      std::function<void(codec::Serializer *, codec::Serializer *)>;
   RpcServer() = default;
   ~RpcServer() = default;
 
@@ -35,14 +35,14 @@ class RpcServer : public TcpApplication {
   void Bind(std::string_view name, F func) {
     handlers_[name.data()] =
         std::bind(&RpcServer::CallProxy<F>, this, func, std::placeholders::_1,
-                  std::placeholders::_2, std::placeholders::_3);
+                  std::placeholders::_2);
   }
 
   template <typename F, typename S>
   void Bind(std::string_view name, F func, S *s) {
-    handlers_[name.data()] = std::bind(
-        &RpcServer::CallProxy<F, S>, this, func, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+    handlers_[name.data()] =
+        std::bind(&RpcServer::CallProxy<F, S>, this, func,
+                  std::placeholders::_1, std::placeholders::_2);
   }
 
  private:
@@ -55,26 +55,16 @@ class RpcServer : public TcpApplication {
         co_return;
       }
 
-      StreamBuffer stream_buffer(buffer.data(), buffer.size());
-      codec::Serializer ds(stream_buffer);
+      codec::Serializer serializer(buffer.begin(), buffer.end());
 
       std::string func_name;
-      ds >> func_name;
-      codec::Serializer *r =
-          this->Call_(func_name, ds.current(), ds.size() - func_name.size());
-      LOG_DEBUG("res: {}, size: {}", std::string(r->data()), r->size());
+      serializer.deserialize(&func_name);
 
-      buffer.resize(r->size());
-      std::memcpy(buffer.data(), r->data(), r->size());
-      RpcValue<int> val;
-      (*r) >> val;
-      LOG_INFO("val: {}", val.val());
-      auto write_size = WritePacket(conn->GetSocket()->GetFd(), buffer);
-      if (write_size != r->size()) {
-        LOG_ERROR("rpc server send response error");
-      }
-      // co_await SendResponse(conn, r);
-      delete r;
+      codec::Serializer *output_serializer =
+          this->CallImpl(func_name, serializer);
+
+      co_await SendResponse(conn, output_serializer);
+      delete output_serializer;
     }
     LOG_INFO("RpcServer OnRequest end");
     co_return;
@@ -109,10 +99,9 @@ class RpcServer : public TcpApplication {
     return already_write_size;
   }
 
-  co::Task<> SendResponse(TcpConnectionPtr conn, codec::Serializer *r) {
-    IOBuffer buffer(r->size());
-    auto total_size = r->size();
-    std::memcpy(buffer.data(), r->data(), total_size);
+  co::Task<> SendResponse(TcpConnectionPtr conn,
+                          codec::Serializer *serializer) {
+    IOBuffer buffer(serializer->cbegin(), serializer->cend());
     auto succ = co_await conn->AsyncWritePacket(buffer);
     if (!succ) {
       LOG_ERROR("RpcServer SendResponse error");
@@ -120,76 +109,78 @@ class RpcServer : public TcpApplication {
     co_return;
   }
 
-  codec::Serializer *Call_(const std::string &name, const char *data, int len) {
-    auto *ds = new codec::Serializer;
+  codec::Serializer *CallImpl(const std::string &name,
+                              codec::Serializer &input_serializer) {
+    auto *output_serializer = new codec::Serializer;
     if (!handlers_.contains(name)) {
-      (*ds) << RpcValue<int>::code_type(RPC_ERR_FUNCTION_NOT_FOUND);
+      output_serializer->serialize(
+          RpcResponse<int>::code_type(RPC_ERR_FUNCTION_NOT_FOUND));
+      output_serializer->serialize(
+          RpcResponse<int>::msg_type("function not bind: " + name));
       LOG_ERROR("function not bind: {}", name);
-      (*ds) << RpcValue<int>::msg_type("function not bind: " + name);
-      return ds;
+      return output_serializer;
     }
     auto &func = handlers_[name];
-    func(ds, data, len);
-    ds->reset();
-    return ds;
+    func(&input_serializer, output_serializer);
+    return output_serializer;
   }
 
   template <typename F>
-  void CallProxy(F func, codec::Serializer *pr, const char *data, int len) {
-    CallProxy_(func, pr, data, len);
+  void CallProxy(F func, codec::Serializer *input_serializer,
+                 codec::Serializer *output_serializer) {
+    CallProxy_(func, input_serializer, output_serializer);
   }
 
   template <typename F, typename S>
-  void CallProxy(F func, S *s, codec::Serializer *pr, const char *data,
-                 int len) {
-    CallProxy_(func, s, pr, data, len);
+  void CallProxy(F func, S *s, codec::Serializer *input_serializer,
+                 codec::Serializer *output_serializer) {
+    CallProxy_(func, s, input_serializer, output_serializer);
   }
 
   // 函数指针
   template <typename R, typename... Params>
-  void CallProxy_(R (*func)(Params...), codec::Serializer *pr, const char *data,
-                  int len) {
-    CallProxy_(std::function<R(Params...)>(func), pr, data, len);
+  void CallProxy_(R (*func)(Params...), codec::Serializer *input_serializer,
+                  codec::Serializer *output_serializer) {
+    CallProxy_(std::function<R(Params...)>(func), input_serializer,
+               output_serializer);
   }
 
   // 类成员函数指针
   template <typename R, typename C, typename S, typename... Params>
-  void CallProxy_(R (C::*func)(Params...), S *s, codec::Serializer *pr,
-                  const char *data, int len) {
+  void CallProxy_(R (C::*func)(Params...), S *s,
+                  codec::Serializer *input_serializer,
+                  codec::Serializer *output_serializer) {
     using return_type = typename type_xx<R>::type;
     using args_type = std::tuple<typename std::decay<Params>::type...>;
-    codec::Serializer ds(StreamBuffer(data, len));
-    constexpr auto N =
-        std::tuple_size<typename std::decay<args_type>::type>::value;
-    args_type args = ds.get_tuple<args_type>(std::make_index_sequence<N>{});
+    args_type args;
+    input_serializer->deserialize(&args);
 
     auto ff = [=](Params... params) -> R { return (s->*func)(params...); };
     return_type res = call_helper<R>(ff, args);
 
-    RpcValue<return_type> value;
+    RpcResponse<return_type> value;
     value.err_code = RPC_SUCCECC;
     value.detail_value = res;
-    (*pr) << value;
+    output_serializer->serialize(value);
   }
 
   // functionnal
   template <typename R, typename... Params>
-  void CallProxy_(std::function<R(Params...)> func, codec::Serializer *pr,
-                  const char *data, int len) {
+  void CallProxy_(std::function<R(Params...)> func,
+                  codec::Serializer *input_serializer,
+                  codec::Serializer *output_serializer) {
     using args_type = std::tuple<typename std::decay<Params>::type...>;
     using return_type = typename type_xx<R>::type;
-    codec::Serializer ds(StreamBuffer(data, len));
-    constexpr auto N =
-        std::tuple_size<typename std::decay<args_type>::type>::value;
-    args_type args = ds.get_tuple<args_type>(std::make_index_sequence<N>{});
+
+    args_type args;
+    input_serializer->deserialize(&args);
 
     return_type res = call_helper<R>(func, args);
 
-    LOG_INFO("CallProxy_ res: {}", res);
-    RpcValue<return_type> value;
+    RpcResponse<return_type> value;
     value.err_code = RPC_SUCCECC;
     value.detail_value = res;
-    (*pr) << value;
+    output_serializer->serialize(value);
   }
 
   std::unordered_map<std::string, HandleFunc> handlers_;
