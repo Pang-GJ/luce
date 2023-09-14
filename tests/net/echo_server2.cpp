@@ -1,13 +1,13 @@
-#include "luce/common/logger.hpp"
-#include "luce/common/thread_pool.hpp"
-#include "luce/io/io_awaiter.hpp"
-#include "luce/net/tcp/tcp_connection.hpp"
-#include "luce/net/tcp_all.hpp"
+#include "luce/common/logger.h"
+#include "luce/common/thread_pool.h"
+#include "luce/io/io_awaiter.h"
+#include "luce/net/tcp/tcp_connection.h"
+#include "luce/net/tcp_all.h"
 
 class EchoServer : public net::TcpApplication {
  private:
   co::Task<> OnRequest(net::TcpConnectionPtr conn,
-                       net::TcpServer &server) override {
+                       net::TcpServer& server) override {
     while (true) {
       net::IOBuffer buffer(512);
       ssize_t recv_len = co_await conn->AsyncRead(&buffer);
@@ -28,7 +28,7 @@ class EchoServer : public net::TcpApplication {
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   net::InetAddress addr{12345};
   EchoServer app;
   net::TcpServer server(addr, &app, 8);

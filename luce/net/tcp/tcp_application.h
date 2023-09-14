@@ -3,8 +3,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "luce/co/task.hpp"
-#include "luce/net/tcp/tcp_connection.hpp"
+#include "luce/co/task.h"
+#include "luce/net/tcp/tcp_connection.h"
 
 namespace net {
 
@@ -15,10 +15,10 @@ class TcpApplication {
  public:
   TcpApplication() = default;
 
-  co::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer &server);
+  co::Task<> HandleRequest(TcpConnectionPtr conn, TcpServer& server);
 
  protected:
-  virtual co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer &server) = 0;
+  virtual co::Task<> OnRequest(TcpConnectionPtr conn, TcpServer& server) = 0;
 
  private:
   std::mutex mtx_;

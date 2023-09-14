@@ -1,6 +1,6 @@
-#include "luce/net/http/http_request.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/common/string_util.hpp"
+#include "luce/net/http/http_request.h"
+#include "luce/common/logger.h"
+#include "luce/common/string_util.h"
 
 namespace net::http {
 
@@ -28,7 +28,7 @@ void HttpRequest::Parse(std::string_view data) {
 }
 
 // 解析请求头
-void HttpRequest::ParseHeaders(std::vector<std::string_view> &headers) {
+void HttpRequest::ParseHeaders(std::vector<std::string_view>& headers) {
   for (size_t i = 1; i < headers.size(); ++i) {
     if (!headers[i].empty() && String::Contains(headers[i], ":")) {
       auto key_value = String::Split(headers[i], ':', false);

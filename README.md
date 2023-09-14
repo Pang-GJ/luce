@@ -34,7 +34,7 @@ xmake run echo_server
 ## 用法
 
 参考`example/echo_server.cpp`  
-用户需要继承`TcpApplication`(位于`include/net/tcp_application.hpp`)
+用户需要继承`TcpApplication`(位于`include/net/tcp_application.h`)
 实现自己的Tcp应用程序，  
 具体来说要实现三个函数：
 

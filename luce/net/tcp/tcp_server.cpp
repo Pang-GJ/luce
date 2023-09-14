@@ -1,14 +1,14 @@
-#include "luce/net/tcp/tcp_server.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/common/singleton.hpp"
-#include "luce/common/thread_pool.hpp"
-#include "luce/net/tcp/tcp_acceptor.hpp"
-#include "luce/timer/timer.hpp"
+#include "luce/net/tcp/tcp_server.h"
+#include "luce/common/logger.h"
+#include "luce/common/singleton.h"
+#include "luce/common/thread_pool.h"
+#include "luce/net/tcp/tcp_acceptor.h"
+#include "luce/timer/timer.h"
 
 namespace net {
 
-TcpServer::TcpServer(const net::InetAddress &local_addr,
-                     net::TcpApplication *app, size_t thread_num)
+TcpServer::TcpServer(const net::InetAddress& local_addr,
+                     net::TcpApplication* app, size_t thread_num)
     : local_addr_(local_addr),
       app_(app),
       reactor_thread_pool_(std::make_unique<ThreadPool>(1)),
@@ -43,7 +43,7 @@ void TcpServer::Start(bool async_start) {
 void TcpServer::Shutdown() {
   is_shutdown_.store(true);
   main_reactor_->Shutdown();
-  for (auto &sub_reactor : sub_reactors_) {
+  for (auto& sub_reactor : sub_reactors_) {
     sub_reactor->Shutdown();
   }
   Singleton<timer::TimerManager>::GetInstance()->Shutdown();

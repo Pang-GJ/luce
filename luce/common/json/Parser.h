@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-#include "luce/common/json/JObject.hpp"
+#include "luce/common/json/JObject.h"
 
 namespace tinyjson {
 
@@ -15,7 +15,7 @@ using std::stringstream;
 #define FUNC_TO_NAME _to_json
 #define FUNC_FROM_NAME _from_json
 
-#define START_TO_JSON void FUNC_TO_NAME(tinyjson::JObject &obj) const {
+#define START_TO_JSON void FUNC_TO_NAME(tinyjson::JObject& obj) const {
 #define to(key) obj[key]
 // push 一个自定义类型成员
 #define to_struct(key, struct_member)            \
@@ -26,7 +26,7 @@ using std::stringstream;
   } while (0)
 #define END_TO_JSON }
 
-#define START_FROM_JSON void FUNC_FROM_NAME(tinyjson::JObject &obj) {
+#define START_FROM_JSON void FUNC_FROM_NAME(tinyjson::JObject& obj) {
 #define from(key, type) obj[key].Value<type>()
 #define from_struct(key, struct_member) struct_member.FUNC_FROM_NAME(obj[key])
 #define END_FROM_JSON }
@@ -38,7 +38,7 @@ class Parser {
   static JObject FromString(string_view content);
 
   template <class T>
-  static string ToJSON(const T &src) {
+  static string ToJSON(const T& src) {
     // 如果是基本类型
     if constexpr (IS_TYPE(T, int_t) || IS_TYPE(T, bool_t) ||
                   IS_TYPE(T, double_t) || IS_TYPE(T, str_t)) {

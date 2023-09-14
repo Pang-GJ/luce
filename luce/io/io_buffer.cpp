@@ -1,7 +1,7 @@
-#include "luce/common/logger.hpp"
-#include "luce/io/io_buffer.hpp"
+#include "luce/io/io_buffer.h"
 #include <cassert>
 #include <cstring>
+#include "luce/common/logger.h"
 
 namespace net {
 
@@ -22,7 +22,7 @@ void IOBuf::Adjust() {
   }
 }
 
-void IOBuf::Copy(const IOBuf *other) {
+void IOBuf::Copy(const IOBuf* other) {
   std::memcpy(data, other->data + other->head, other->length);
   head = 0;
   length = other->length;
@@ -64,7 +64,7 @@ BufPool::BufPool() : total_mem_(0) {
 }
 
 void BufPool::AllocPoolMem(MemCap mem_cap, size_t num) {
-  IOBuf *prev;
+  IOBuf* prev;
   // 开辟mem_cap大小的 buf 内存池
   pool_[mem_cap] = new IOBuf(mem_cap);
   if (pool_[mem_cap] == nullptr) {
@@ -89,7 +89,7 @@ void BufPool::AllocPoolMem(MemCap mem_cap, size_t num) {
 // 2. 如果该组已经没有节点可以使用，可以额外申请
 // 3. 总申请长度不能超过最大的限制大小 MEM_LIMIT
 // 4. 如果有该节点需要的内存块, 直接取出，并将该内存块从pool中摘除
-IOBuf *BufPool::AllocBuf(int N) {
+IOBuf* BufPool::AllocBuf(int N) {
   // 找到N最接近哪个hash组
   int key;
   if (N <= m4K) {
@@ -119,7 +119,7 @@ IOBuf *BufPool::AllocBuf(int N) {
       exit(1);
     }
 
-    IOBuf *new_buf = new IOBuf(key);
+    IOBuf* new_buf = new IOBuf(key);
     if (new_buf == nullptr) {
       LOG_ERROR("new buf error");
       exit(1);
@@ -129,7 +129,7 @@ IOBuf *BufPool::AllocBuf(int N) {
   }
 
   // 如果有，从pool_中摘除该内存块
-  IOBuf *target = pool_[key];
+  IOBuf* target = pool_[key];
   pool_[key] = target->next;
   target->next = nullptr;
   return target;
@@ -137,7 +137,7 @@ IOBuf *BufPool::AllocBuf(int N) {
 
 // 重置一个IOBuf, 上层不再使用或者使用完成之后
 // 需要将该Buf放回pool中
-void BufPool::Revert(IOBuf *buffer) {
+void BufPool::Revert(IOBuf* buffer) {
   // 每个buf的容量是固定的，它们的大小就是pool中的key
   auto key = buffer->capacity;
   // 重置IOBuf内的位置指针

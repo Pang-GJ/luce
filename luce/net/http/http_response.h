@@ -22,7 +22,7 @@ class HttpResponse {
 
   std::string GetFileType(std::string_view file_name);
 
-  std::string &GetData() { return buffer_; }
+  std::string& GetData() { return buffer_; }
 
   void Clear() { buffer_.clear(); }
 

@@ -6,7 +6,7 @@
 
 namespace net {
 
-int32_t GetInt32ForNetByte(const char *buf) {
+int32_t GetInt32ForNetByte(const char* buf) {
   int32_t res;
   std::memcpy(&res, buf, sizeof(res));
   return static_cast<int32_t>(ntohl(res));

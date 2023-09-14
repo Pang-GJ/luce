@@ -21,13 +21,13 @@ class IOBuf {
   void Adjust();
 
   // 将其它IOBuf的内容拷贝
-  void Copy(const IOBuf *other);
+  void Copy(const IOBuf* other);
 
   // 处理长度为len的数据，移动head和修正length
   void pop(size_t len);
 
   // 如果存在多个buffer，用链表连接起来
-  IOBuf *next;
+  IOBuf* next;
   // 当前buffer的容量大小
   size_t capacity;
   // 当前buffer的有效长度
@@ -35,10 +35,10 @@ class IOBuf {
   // 未处理数据的头部位置索引
   size_t head;
   // 当前IOBuf保存的数据
-  char *data;
+  char* data;
 };
 
-using Pool = std::unordered_map<size_t, IOBuf *>;
+using Pool = std::unordered_map<size_t, IOBuf*>;
 
 // 总内存池最大限制 单位是kb 目前设为5GB
 constexpr size_t MEM_LIMIT = static_cast<const size_t>(5U * 1024 * 1024);
@@ -56,16 +56,16 @@ class BufPool : public noncopyable {
     m8M = 8388608
   };
 
-  static BufPool *GetInstance() {
+  static BufPool* GetInstance() {
     static BufPool buf_pool;
     return &buf_pool;
   }
 
   // 开辟一个IOBuf
-  IOBuf *AllocBuf(int N = MemCap::m4K);
+  IOBuf* AllocBuf(int N = MemCap::m4K);
 
   // 重置一个IOBUf
-  void Revert(IOBuf *buffer);
+  void Revert(IOBuf* buffer);
 
  private:
   BufPool();

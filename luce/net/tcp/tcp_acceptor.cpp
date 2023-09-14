@@ -1,10 +1,10 @@
-#include "luce/net/tcp/tcp_acceptor.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/io/io_awaiter.hpp"
+#include "luce/net/tcp/tcp_acceptor.h"
+#include "luce/common/logger.h"
+#include "luce/io/io_awaiter.h"
 
 namespace net {
 
-TcpAcceptor::TcpAcceptor(TcpServer &server, int sock_fd) : server_(server) {
+TcpAcceptor::TcpAcceptor(TcpServer& server, int sock_fd) : server_(server) {
   LOG_INFO("init acceptor");
   socket_ = std::make_shared<Socket>(sock_fd);
   socket_->SetNonblock();

@@ -30,7 +30,7 @@ struct HttpRequest : noncopyable {
 
  private:
   // 解析请求头
-  void ParseHeaders(std::vector<std::string_view> &headers);
+  void ParseHeaders(std::vector<std::string_view>& headers);
   // 解析请求行
   void ParseLine(std::string_view line);
   // 解析请求行中的URL

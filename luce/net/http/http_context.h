@@ -1,10 +1,10 @@
 #pragma once
 
-#include "luce/common/json.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/common/string_util.hpp"
-#include "luce/net/http/http_request.hpp"
-#include "luce/net/http/http_response.hpp"
+#include "luce/common/json.h"
+#include "luce/common/logger.h"
+#include "luce/common/string_util.h"
+#include "luce/net/http/http_request.h"
+#include "luce/net/http/http_response.h"
 
 #include <memory>
 #include <string_view>
@@ -18,14 +18,14 @@ struct HttpContext {
         path_(req_->url_),
         method_(req_->method_) {}
 
-  std::string QueryURL(const std::string &key) {
+  std::string QueryURL(const std::string& key) {
     if (req_->url_params_.contains(key)) {
       return req_->url_params_[key];
     }
     return {};
   }
 
-  std::string QueryBody(const std::string &key) {
+  std::string QueryBody(const std::string& key) {
     if (req_->body_params_.contains(key)) {
       return req_->body_params_[key];
     }
@@ -42,13 +42,13 @@ struct HttpContext {
   }
 
   template <typename... Args>
-  void String(int code, std::string_view fmt, Args &&...args) {
+  void String(int code, std::string_view fmt, Args&&... args) {
     SetHeader("Content-Type", "text/plain");
     Status(code);
     res_->SetBody(String::Format(fmt, std::forward<Args>(args)...));
   }
 
-  void JSON(int code, tinyjson::JObject &json_object) {
+  void JSON(int code, tinyjson::JObject& json_object) {
     SetHeader("Content-Type", "application/json");
     Status(code);
     // TODO(pgj): impl json

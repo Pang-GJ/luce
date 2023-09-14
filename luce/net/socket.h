@@ -4,10 +4,10 @@
 #include <memory>
 #include <string_view>
 
+#include "luce/co/task.h"
 #include "luce/common/noncopyable.h"
-#include "luce/co/task.hpp"
-#include "luce/net/event_manager.hpp"
-#include "luce/net/inet_address.hpp"
+#include "luce/net/event_manager.h"
+#include "luce/net/inet_address.h"
 
 namespace net {
 
@@ -16,7 +16,7 @@ class Socket : noncopyable {
   explicit Socket(int sock_fd = -1) : fd_(sock_fd) {}
   ~Socket();
 
-  void BindAddress(const InetAddress &local_addr);
+  void BindAddress(const InetAddress& local_addr);
 
   void Listen();
 

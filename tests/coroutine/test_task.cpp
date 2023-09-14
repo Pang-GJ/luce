@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 #include "luce/co/scheduler.h"
-#include "luce/co/task.hpp"
+#include "luce/co/task.h"
 
 using co::co_spawn;
 
@@ -40,7 +40,7 @@ co::Task<> co_main() {
 
 co::Task<int> ans() { co_return 42; }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   co_spawn([]() -> co::Task<> {
     auto res = co_await simple_task();
     fmt::print("the result of simple_task: {}\n", res);

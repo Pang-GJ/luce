@@ -1,10 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include "luce/common/logger.hpp"
-#include "luce/common/thread_pool.hpp"
+#include "luce/common/logger.h"
+#include "luce/common/thread_pool.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   // create thread pool with 4 worker threads
   ThreadPool pool(4);
 

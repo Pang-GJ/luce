@@ -4,13 +4,13 @@
 #include <cstdlib>
 #include <thread>
 #include <vector>
-#include "luce/common/logger.hpp"
+#include "luce/common/logger.h"
 
 namespace co {
 
 namespace {
 
-void GetCurrentCpus(std::vector<uint32_t> *ids) {
+void GetCurrentCpus(std::vector<uint32_t>* ids) {
   cpu_set_t set;
   ids->clear();
   if (sched_getaffinity(0, sizeof(set), &set) == 0) {
@@ -33,7 +33,7 @@ ThreadPool::ThreadPool(size_t thread_num, bool enable_work_steal,
       enable_core_bindings_(enable_core_bindings),
       enable_work_steal_(enable_work_steal) {
   auto worker = [this](size_t id) {
-    auto *current = GetCurrent();
+    auto* current = GetCurrent();
     current->first = id;
     current->second = this;
     while (true) {
@@ -42,7 +42,7 @@ ThreadPool::ThreadPool(size_t thread_num, bool enable_work_steal,
         // 首先尝试去 work steal
         for (auto i = 0; i < thread_num_; ++i) {
           if (task_queues_[(id + i) % thread_num_].try_pop_if(
-                  &task_item, [](auto &item) { return item.can_steal; })) {
+                  &task_item, [](auto& item) { return item.can_steal; })) {
             break;
           }
         }
@@ -93,10 +93,10 @@ ThreadPool::ThreadPool(size_t thread_num, bool enable_work_steal,
 
 ThreadPool::~ThreadPool() {
   stopped_ = true;
-  for (auto &queue : task_queues_) {
+  for (auto& queue : task_queues_) {
     queue.stop();
   }
-  for (auto &worker : workers_) {
+  for (auto& worker : workers_) {
     worker.join();
   }
 }
@@ -128,7 +128,7 @@ void ThreadPool::ScheduleById(TaskItem::TaskType coro, int32_t id) {
 }
 
 int32_t ThreadPool::GetCurrentId() const {
-  auto *current = GetCurrent();
+  auto* current = GetCurrent();
   if (this == current->second) {
     return current->first;
   }
@@ -143,8 +143,8 @@ size_t ThreadPool::GetItemCount() const {
   return res;
 }
 
-std::pair<size_t, ThreadPool *> *ThreadPool::GetCurrent() const {
-  static thread_local std::pair<size_t, ThreadPool *> current(-1, nullptr);
+std::pair<size_t, ThreadPool*>* ThreadPool::GetCurrent() const {
+  static thread_local std::pair<size_t, ThreadPool*> current(-1, nullptr);
   return &current;
 }
 

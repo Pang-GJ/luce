@@ -7,7 +7,7 @@
 #include <functional>
 #include <thread>
 #include <vector>
-#include "luce/common/blocking_queue.hpp"
+#include "luce/common/blocking_queue.h"
 
 namespace co {
 
@@ -33,7 +33,7 @@ class ThreadPool {
   size_t GetThreadNum() const { return thread_num_; };
 
  private:
-  std::pair<size_t, ThreadPool *> *GetCurrent() const;
+  std::pair<size_t, ThreadPool*>* GetCurrent() const;
   size_t thread_num_;
 
   std::vector<BlockingQueue<TaskItem>> task_queues_;

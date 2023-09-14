@@ -24,7 +24,7 @@ struct Timer {
 // A simple timer manager
 class TimerManager {
  public:
-  size_t AddTimer(uint32_t milliseconds, const TimerTask &callback) {
+  size_t AddTimer(uint32_t milliseconds, const TimerTask& callback) {
     TimePoint now = std::chrono::system_clock::now();
     TimePoint expiry_time = now + std::chrono::milliseconds(milliseconds);
     std::unique_lock lock(mtx_);
@@ -37,7 +37,7 @@ class TimerManager {
     std::unique_lock lock(mtx_);
     auto iter = std::find_if(
         timers_.begin(), timers_.end(),
-        [&](const Timer &timer) { return timer.timer_id == timer_id; });
+        [&](const Timer& timer) { return timer.timer_id == timer_id; });
     if (iter != timers_.end()) {
       Erase(iter - timers_.begin());
     }
@@ -99,18 +99,18 @@ class TimerManager {
 
   bool Empty() const { return timers_.empty(); }
 
-  Timer &top() { return timers_.front(); }
+  Timer& top() { return timers_.front(); }
 
   Timer pop() {
     if (timers_.empty()) {
       return {};
     }
-    auto &timer = top();
+    auto& timer = top();
     Erase(0);
     return timer;
   }
 
-  void Push(const Timer &timer) {
+  void Push(const Timer& timer) {
     timers_.emplace_back(timer);
     HeapifyUp(timers_.size() - 1);
   }

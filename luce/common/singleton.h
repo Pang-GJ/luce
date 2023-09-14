@@ -6,15 +6,15 @@
 template <class T>
 class Singleton {
  public:
-  static T *GetInstance() {
+  static T* GetInstance() {
     static T instance;
     return &instance;
   }
 
-  Singleton(T &&) = delete;
-  Singleton(const T &) = delete;
-  Singleton &&operator=(const T &&) = delete;
-  Singleton &operator=(const T &) = delete;
+  Singleton(T&&) = delete;
+  Singleton(const T&) = delete;
+  Singleton&& operator=(const T&&) = delete;
+  Singleton& operator=(const T&) = delete;
 
  protected:
   Singleton() = default;

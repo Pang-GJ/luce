@@ -1,6 +1,6 @@
 BasedOnStyle: Google
 DerivePointerAlignment: false
-PointerAlignment: Right
+PointerAlignment: Left
 ColumnLimit: 80
 Standard: c++20
 

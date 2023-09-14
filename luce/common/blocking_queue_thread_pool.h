@@ -1,14 +1,16 @@
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
+#include <cassert>
+#include <cstddef>
+#include <cstdlib>
+#include <ctime>
 #include <functional>
 #include <future>
 #include <memory>
-#include <mutex>
-#include <queue>
 #include <thread>
-#include "luce/common/logger.hpp"
+#include "luce/common/blocking_queue.h"
+#include "luce/common/logger.h"
 
 // 线程池
 class ThreadPool {
@@ -17,49 +19,57 @@ class ThreadPool {
   ~ThreadPool();
 
   template <class F, class... Args>
-  auto Commit(F &&f, Args &&...args) -> std::future<decltype(f(args...))>;
+  auto Commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))>;
+
+  bool CommitById(std::function<void()> func, size_t id = -1);
 
   void Shutdown();
 
-  size_t Size() const { return workers_.size(); }
+  size_t Size() const { return threads_.size(); }
+
+  size_t TaskNum() const {
+    size_t sum = 0;
+    for (size_t i = 0; i < thread_num_; ++i) {
+      sum += queues_[i].size();
+    }
+    return sum;
+  }
 
  private:
-  std::vector<std::thread> workers_;
-  std::queue<std::packaged_task<void()>> tasks_;
+  using TaskType = std::function<void()>;
 
-  // sync
-  std::mutex queue_mtx_;
-  std::condition_variable condition;
-  std::condition_variable condition_producers_;
+  std::vector<std::thread> threads_;
+  // 采用多个队列减少锁竞争
+  std::vector<BlockingQueue<TaskType>> queues_;
+  size_t thread_num_;
   std::atomic<bool> stop_;
 };
 
-inline ThreadPool::ThreadPool(size_t thread_num) : stop_(false) {
-  for (size_t i = 0; i < thread_num; ++i) {
-    workers_.emplace_back([this] {
-      for (;;) {
-        std::packaged_task<void()> task;
-        {
-          std::unique_lock<std::mutex> lock(queue_mtx_);
-          this->condition.wait(
-              lock, [this] { return this->stop_ || !this->tasks_.empty(); });
-          if (this->stop_) {
-            return;
-          }
-          if (this->tasks_.empty()) {
-            continue;
-          }
-          task = std::move(this->tasks_.front());
-          this->tasks_.pop();
-          if (this->tasks_.empty()) {
-            // notify that the queue is empty
-            condition_producers_.notify_one();
-          }
+inline ThreadPool::ThreadPool(size_t thread_num)
+    : queues_(thread_num), thread_num_(thread_num), stop_(false) {
+  auto worker = [this](size_t id) {
+    while (true) {
+      TaskType task{};
+      if (!queues_[id].pop(&task)) {
+        if (stop_) {
+          return;
         }
+        continue;
+      }
+      if (task) {
         task();
       }
-    });
+    }
+  };
+
+  threads_.reserve(thread_num);
+
+  for (size_t i = 0; i < thread_num; ++i) {
+    threads_.emplace_back(worker, i);
   }
+
+  // init srand
+  srand(time(nullptr));
 }
 
 inline ThreadPool::~ThreadPool() {
@@ -70,34 +80,45 @@ inline ThreadPool::~ThreadPool() {
 
 // add new work item to thead pool
 template <class F, class... Args>
-inline auto ThreadPool::Commit(F &&f, Args &&...args)
+inline auto ThreadPool::Commit(F&& f, Args&&... args)
     -> std::future<decltype(f(args...))> {
   using return_type = decltype(f(args...));
 
-  std::packaged_task<return_type()> task(
+  auto task = std::make_shared<std::packaged_task<return_type()>>(
       std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-  std::future<return_type> future = task.get_future();
-  {
-    std::unique_lock<std::mutex> lock(queue_mtx_);
-    if (!stop_) {
-      tasks_.emplace(std::move(task));
-    }
-  }
-  condition.notify_one();
+  std::future<return_type> future = task->get_future();
+
+  // 随机负载均衡
+  size_t id = rand() % thread_num_;
+  queues_[id].push([task]() {
+    assert(task != nullptr);
+    (*task)();
+  });
+
   return future;
 }
 
+inline bool ThreadPool::CommitById(std::function<void()> func, size_t id) {
+  if (func == nullptr || stop_) {
+    return false;
+  }
+  if (id < 0) {
+    id = rand() % thread_num_;
+  }
+  assert(id < thread_num_);
+  queues_[id].push(std::move(func));
+  return true;
+}
+
 inline void ThreadPool::Shutdown() {
+  stop_ = true;
+  for (auto& queue : queues_) {
+    queue.stop();
+  }
+  for (auto& thread : threads_) {
+    thread.join();
+  }
   LOG_INFO("thread pool shutdown");
-  {
-    std::unique_lock<std::mutex> lock(queue_mtx_);
-    condition_producers_.wait(lock, [this] { return this->tasks_.empty(); });
-    stop_ = true;
-  }
-  condition.notify_all();
-  for (std::thread &worker : workers_) {
-    worker.join();
-  }
 }
 
 // 可以增长 method: AddThread

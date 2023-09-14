@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-#include "luce/common/logger.hpp"
+#include "luce/common/logger.h"
 #include "luce/common/noncopyable.h"
 
 namespace co {
@@ -14,21 +14,21 @@ namespace co {
 template <typename T>
 class Result {
  public:
-  void return_value(T &&value) { value_ = T(std::move(value)); }
-  void return_value(const T &value) { value_ = value; }
+  void return_value(T&& value) { value_ = T(std::move(value)); }
+  void return_value(const T& value) { value_ = value; }
 
-  std::suspend_always yield_value(T &&value) {
+  std::suspend_always yield_value(T&& value) {
     value_ = T(std::move(value));
     return {};
   }
 
-  std::suspend_always yield_value(const T &value) {
+  std::suspend_always yield_value(const T& value) {
     value_ = value;
     return {};
   }
 
-  void set_value(T &&value) { value_ = T(std::move(value)); }
-  void set_value(const T &value) { value_ = value; }
+  void set_value(T&& value) { value_ = T(std::move(value)); }
+  void set_value(const T& value) { value_ = value; }
 
   T result() { return value_; }
 
@@ -53,7 +53,7 @@ struct PromiseBase : public Result<T> {
       std::coroutine_handle<> await_suspend(
           CoroHandle suspended_coro) noexcept {
         // let coroutine_handle go out, it comes from await_suspend
-        auto &promise = suspended_coro.promise();
+        auto& promise = suspended_coro.promise();
         std::coroutine_handle<> continuation = promise.continuation_;
         if (promise.is_detached_) {
           LOG_DEBUG("suspended_coro.destroy();");
@@ -120,7 +120,7 @@ struct Task : noncopyable {
     LOG_DEBUG("new Task: {}", handle.address());
   }
 
-  Task(Task &&other) noexcept
+  Task(Task&& other) noexcept
       : handle_(std::exchange(other.handle_, nullptr)) {}
 
   ~Task() {
@@ -130,7 +130,7 @@ struct Task : noncopyable {
     }
   }
 
-  auto operator co_await() const & noexcept {
+  auto operator co_await() const& noexcept {
     struct Awaiter : TaskAwaiterBase {
       using TaskAwaiterBase::TaskAwaiterBase;
 
@@ -139,7 +139,7 @@ struct Task : noncopyable {
     return Awaiter(handle_);
   }
 
-  auto operator co_await() const && noexcept {
+  auto operator co_await() const&& noexcept {
     struct Awaiter : TaskAwaiterBase {
       using TaskAwaiterBase::TaskAwaiterBase;
 
@@ -176,7 +176,7 @@ struct Task : noncopyable {
     handle_ = nullptr;
   }
 
-  friend void swap(Task &lhs, Task &rhs) noexcept {
+  friend void swap(Task& lhs, Task& rhs) noexcept {
     std::swap(lhs.handle_, rhs.handle_);
   }
 

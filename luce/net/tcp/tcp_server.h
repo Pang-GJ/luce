@@ -1,11 +1,11 @@
 #pragma once
 
+#include "luce/co/task.h"
 #include "luce/common/noncopyable.h"
-#include "luce/common/thread_pool.hpp"
-#include "luce/co/task.hpp"
-#include "luce/net/event_manager.hpp"
-#include "luce/net/tcp/tcp_application.hpp"
-#include "luce/timer/timer.hpp"
+#include "luce/common/thread_pool.h"
+#include "luce/net/event_manager.h"
+#include "luce/net/tcp/tcp_application.h"
+#include "luce/timer/timer.h"
 
 #include <atomic>
 #include <memory>
@@ -17,21 +17,21 @@ class TcpAcceptor;
 
 class TcpServer : noncopyable {
  public:
-  TcpServer(const InetAddress &local_addr, TcpApplication *app,
+  TcpServer(const InetAddress& local_addr, TcpApplication* app,
             size_t thread_num = std::thread::hardware_concurrency());
 
   ~TcpServer();
 
-  EventManager &GetMainReactor() { return *main_reactor_; }
+  EventManager& GetMainReactor() { return *main_reactor_; }
 
-  EventManager &GetSubReactor() {
+  EventManager& GetSubReactor() {
     // TODO(pgj): 负载均衡算法
     auto index = cnt_ % sub_reactors_.size();
     cnt_++;
     return *sub_reactors_[index];
   }
 
-  const InetAddress &GetLocalAddr() { return local_addr_; }
+  const InetAddress& GetLocalAddr() { return local_addr_; }
 
   void Start(bool async_start = true);
 
@@ -46,8 +46,8 @@ class TcpServer : noncopyable {
 
   std::atomic<size_t> cnt_{0};
   std::atomic<bool> is_shutdown_{false};
-  const InetAddress &local_addr_;
-  TcpApplication *app_;
+  const InetAddress& local_addr_;
+  TcpApplication* app_;
   std::unique_ptr<TcpAcceptor> acceptor_;
   std::unique_ptr<ThreadPool> reactor_thread_pool_;
   std::shared_ptr<ThreadPool> work_thread_pool_;

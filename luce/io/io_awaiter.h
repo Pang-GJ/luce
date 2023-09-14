@@ -8,12 +8,12 @@
 #include <cerrno>
 #include <cstring>
 
-#include "luce/co/task.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/net/event_manager.hpp"
-#include "luce/net/socket.hpp"
-#include "luce/net/tcp/tcp_acceptor.hpp"
-#include "luce/net/tcp/tcp_connection.hpp"
+#include "luce/co/task.h"
+#include "luce/common/logger.h"
+#include "luce/net/event_manager.h"
+#include "luce/net/socket.h"
+#include "luce/net/tcp/tcp_acceptor.h"
+#include "luce/net/tcp/tcp_connection.h"
 
 namespace net {
 
@@ -24,7 +24,7 @@ constexpr int HEADER_SIZE = 4;
 // example only
 class ReadInnerAwaiter {
  public:
-  ReadInnerAwaiter(TcpConnection *conn, void *buffer, size_t len)
+  ReadInnerAwaiter(TcpConnection* conn, void* buffer, size_t len)
       : conn_(conn), buffer_(buffer), len_(len) {}
 
   // if IO is ready (recv_ > 0), then we should not suspend
@@ -55,15 +55,15 @@ class ReadInnerAwaiter {
   }
 
  private:
-  TcpConnection *conn_;
-  void *buffer_;
+  TcpConnection* conn_;
+  void* buffer_;
   ssize_t recv_{0};
   size_t len_;
 };
 
 class WriteInnerAwaiter {
  public:
-  WriteInnerAwaiter(TcpConnection *conn, const void *buffer, size_t len)
+  WriteInnerAwaiter(TcpConnection* conn, const void* buffer, size_t len)
       : conn_(conn), buffer_(buffer), len_(len) {}
 
   auto await_ready() -> bool {
@@ -93,8 +93,8 @@ class WriteInnerAwaiter {
   }
 
  private:
-  TcpConnection *conn_;
-  const void *buffer_;
+  TcpConnection* conn_;
+  const void* buffer_;
   ssize_t send_{0};
   size_t len_;
 };
@@ -103,7 +103,7 @@ class WriteInnerAwaiter {
 
 class AcceptAwaiter {
  public:
-  explicit AcceptAwaiter(TcpAcceptor *acceptor) : acceptor_(acceptor) {}
+  explicit AcceptAwaiter(TcpAcceptor* acceptor) : acceptor_(acceptor) {}
 
   bool await_ready() {
     conn_fd_ = do_accept(acceptor_->GetSocket()->GetFd());
@@ -131,20 +131,20 @@ class AcceptAwaiter {
     socklen_t len = sizeof addr;
     bzero(&addr, len);
     // 设置为非阻塞
-    return ::accept4(acceptor_->GetSocket()->GetFd(), (struct sockaddr *)&addr,
+    return ::accept4(acceptor_->GetSocket()->GetFd(), (struct sockaddr*)&addr,
                      &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
   }
 
-  TcpAcceptor *acceptor_;
+  TcpAcceptor* acceptor_;
   int conn_fd_{-1};  // the coming connection fd
 };
 
-co::Task<size_t> AsyncRead(TcpConnection *conn, IOBuffer &buffer);
+co::Task<size_t> AsyncRead(TcpConnection* conn, IOBuffer& buffer);
 
-co::Task<size_t> AsyncWrite(TcpConnection *conn, const IOBuffer &buffer);
+co::Task<size_t> AsyncWrite(TcpConnection* conn, const IOBuffer& buffer);
 
-co::Task<bool> AsyncReadPacket(TcpConnection *conn, IOBuffer &buffer);
+co::Task<bool> AsyncReadPacket(TcpConnection* conn, IOBuffer& buffer);
 
-co::Task<bool> AsyncWritePacket(TcpConnection *conn, const IOBuffer &buffer);
+co::Task<bool> AsyncWritePacket(TcpConnection* conn, const IOBuffer& buffer);
 
 }  // namespace net

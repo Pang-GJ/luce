@@ -5,17 +5,17 @@
 #include <memory>
 #include <string>
 #include "luce/codec/tinypb_protocol.h"
-#include "luce/common/logger.hpp"
+#include "luce/common/logger.h"
 #include "luce/net/util.h"
 
 namespace codec {
 
-void TinyPBCoder::Encode(AbstractProtocol::Ptr &in_message,
-                         Buffer *out_buffer) {
+void TinyPBCoder::Encode(AbstractProtocol::Ptr& in_message,
+                         Buffer* out_buffer) {
   std::shared_ptr<TinyPBProtocol> msg =
       std::dynamic_pointer_cast<TinyPBProtocol>(in_message);
   int len = 0;
-  const char *buf = EncodeTinyPB(msg, &len);
+  const char* buf = EncodeTinyPB(msg, &len);
   if (buf != nullptr && len != 0) {
     for (auto i = 0; i < len; ++i) {
       out_buffer->emplace_back(buf[i]);
@@ -27,8 +27,8 @@ void TinyPBCoder::Encode(AbstractProtocol::Ptr &in_message,
   }
 }
 
-void TinyPBCoder::Decode(const Buffer &in_buffer,
-                         AbstractProtocol::Ptr *out_message) {
+void TinyPBCoder::Decode(const Buffer& in_buffer,
+                         AbstractProtocol::Ptr* out_message) {
   const auto buffer_size = in_buffer.size();
   int start_index = 0;
   // PB_START 是第一个位置
@@ -120,8 +120,8 @@ void TinyPBCoder::Decode(const Buffer &in_buffer,
   *out_message = message;
 }
 
-const char *TinyPBCoder::EncodeTinyPB(
-    const std::shared_ptr<TinyPBProtocol> &message, int *len) {
+const char* TinyPBCoder::EncodeTinyPB(
+    const std::shared_ptr<TinyPBProtocol>& message, int* len) {
   if (message->msg_id.empty()) {
     message->msg_id = "123456789";
   }
@@ -131,8 +131,8 @@ const char *TinyPBCoder::EncodeTinyPB(
                      message->err_info.length() + message->pb_data.length();
   LOG_DEBUG("pk_len = {}", pk_len);
 
-  char *buf = new char[pk_len];
-  char *tmp = buf;
+  char* buf = new char[pk_len];
+  char* tmp = buf;
 
   *tmp = TinyPBProtocol::PB_START;
   tmp++;

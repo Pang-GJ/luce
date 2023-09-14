@@ -3,7 +3,7 @@
 
 namespace co {
 
-void Scheduler::co_spawn(Task<> &&task) noexcept {
+void Scheduler::co_spawn(Task<>&& task) noexcept {
   auto handle = task.get_handle();
   task.detach();
   tp_.ScheduleById(handle);

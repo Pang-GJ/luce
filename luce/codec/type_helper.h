@@ -19,7 +19,7 @@ struct HasSerializeMethod {
  private:
   template <typename C>
   static constexpr auto test(int)
-      -> decltype(std::declval<C>().serialize(std::declval<Serializer *>()),
+      -> decltype(std::declval<C>().serialize(std::declval<Serializer*>()),
                   std::true_type());
 
   template <typename C>
@@ -39,7 +39,7 @@ struct HasDeserializeMethod {
  private:
   template <typename C>
   static constexpr auto test(int)
-      -> decltype(std::declval<C>().deserialize(std::declval<Serializer *>()),
+      -> decltype(std::declval<C>().deserialize(std::declval<Serializer*>()),
                   std::true_type());
 
   template <typename C>

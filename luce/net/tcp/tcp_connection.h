@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "luce/net/socket.hpp"
+#include "luce/net/socket.h"
 
 namespace net {
 
@@ -14,17 +14,17 @@ class WriteAwaiter;
 class TcpConnection : noncopyable,
                       public std::enable_shared_from_this<TcpConnection> {
  public:
-  TcpConnection(std::shared_ptr<Socket> sock, EventManager &event_manager);
+  TcpConnection(std::shared_ptr<Socket> sock, EventManager& event_manager);
 
   ~TcpConnection();
 
-  co::Task<size_t> AsyncRead(IOBuffer *buffer);
-  co::Task<size_t> AsyncWrite(const IOBuffer &buffer);
+  co::Task<size_t> AsyncRead(IOBuffer* buffer);
+  co::Task<size_t> AsyncWrite(const IOBuffer& buffer);
 
-  co::Task<bool> AsyncReadPacket(IOBuffer *buffer);
-  co::Task<bool> AsyncWritePacket(const IOBuffer &buffer);
+  co::Task<bool> AsyncReadPacket(IOBuffer* buffer);
+  co::Task<bool> AsyncWritePacket(const IOBuffer& buffer);
 
-  auto GetEventManager() const -> EventManager & { return event_manager_; }
+  auto GetEventManager() const -> EventManager& { return event_manager_; }
 
   auto GetSocket() -> std::shared_ptr<Socket> { return socket_; }
 
@@ -38,10 +38,10 @@ class TcpConnection : noncopyable,
   bool IsClosed() const { return is_closed_; }
 
  private:
-  explicit TcpConnection(EventManager &event_manager)
+  explicit TcpConnection(EventManager& event_manager)
       : event_manager_(event_manager) {}
 
-  EventManager &event_manager_;
+  EventManager& event_manager_;
   std::shared_ptr<Socket> socket_;
   std::atomic<bool> is_closed_{false};
 };

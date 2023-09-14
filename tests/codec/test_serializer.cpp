@@ -8,19 +8,19 @@ using namespace codec;  // NOLINT
 class A {
  public:
   A() = default;
-  A(const std::string &name, int age) : name(name), age(age) {}
+  A(const std::string& name, int age) : name(name), age(age) {}
 
-  void serialize(Serializer *serializer) const {
+  void serialize(Serializer* serializer) const {
     serializer->serialize(name);
     serializer->serialize(age);
   }
 
-  void deserialize(Serializer *serializer) {
+  void deserialize(Serializer* serializer) {
     serializer->deserialize(&name);
     serializer->deserialize(&age);
   }
 
-  bool operator==(const A &rhs) { return age == rhs.age && name == rhs.name; }
+  bool operator==(const A& rhs) { return age == rhs.age && name == rhs.name; }
 
  private:
   std::string name;
@@ -31,20 +31,20 @@ class A {
 class B {
  public:
   B() = default;
-  B(const std::string &address, int salary)
+  B(const std::string& address, int salary)
       : address(address), salary(salary) {}
 
-  void serialize(Serializer *serializer) const {
+  void serialize(Serializer* serializer) const {
     serializer->serialize(address);
     serializer->serialize(salary);
   }
 
-  void deserialize(Serializer *serializer) {
+  void deserialize(Serializer* serializer) {
     serializer->deserialize(&address);
     serializer->deserialize(&salary);
   }
 
-  bool operator==(const B &rhs) {
+  bool operator==(const B& rhs) {
     return address == rhs.address && salary == rhs.salary;
   }
 
@@ -57,20 +57,20 @@ class B {
 class C {
  public:
   C() = default;
-  C(bool isStudent, const std::string &school)
+  C(bool isStudent, const std::string& school)
       : is_student(isStudent), school(school) {}
 
-  void serialize(Serializer *serializer) const {
+  void serialize(Serializer* serializer) const {
     serializer->serialize(is_student);
     serializer->serialize(school);
   }
 
-  void deserialize(Serializer *serializer) {
+  void deserialize(Serializer* serializer) {
     serializer->deserialize(&is_student);
     serializer->deserialize(&school);
   }
 
-  bool operator==(const C &rhs) {
+  bool operator==(const C& rhs) {
     return is_student == rhs.is_student && school == rhs.school;
   }
 
@@ -81,11 +81,11 @@ class C {
 
 template <std::size_t I = 0, typename... Ts>
 typename std::enable_if<I == sizeof...(Ts), void>::type print_tuple(
-    const std::tuple<Ts...> &t) {}
+    const std::tuple<Ts...>& t) {}
 
 template <std::size_t I = 0, typename... Ts>
     typename std::enable_if <
-    I<sizeof...(Ts), void>::type print_tuple(const std::tuple<Ts...> &t) {
+    I<sizeof...(Ts), void>::type print_tuple(const std::tuple<Ts...>& t) {
   auto container = std::get<I>(t);
   for (auto item : container) {
     std::cout << item << " ";

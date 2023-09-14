@@ -9,20 +9,20 @@
 #include <cerrno>
 #include <cstring>
 #include <tuple>
-#include "luce/co/task.hpp"
+#include "luce/co/task.h"
 #include "luce/codec/serializer.h"
-#include "luce/common/logger.hpp"
-#include "luce/io/io_awaiter.hpp"
+#include "luce/common/logger.h"
+#include "luce/io/io_awaiter.h"
 #include "luce/net/rpc/invoke_helper.h"
 #include "luce/net/rpc/rpc_err_code.h"
 #include "luce/net/rpc/rpc_value.h"
-#include "luce/net/tcp/tcp_application.hpp"
-#include "luce/net/tcp/tcp_connection.hpp"
+#include "luce/net/tcp/tcp_application.h"
+#include "luce/net/tcp/tcp_connection.h"
 namespace net::rpc {
 
 class BlockingRpcClient {
  public:
-  BlockingRpcClient(const std::string &server_ip, int server_port) {
+  BlockingRpcClient(const std::string& server_ip, int server_port) {
     client_fd_ = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
     struct sockaddr_in server_addr;
@@ -32,7 +32,7 @@ class BlockingRpcClient {
 
     int retry_times = 50;
     while ((retry_times--) != 0) {
-      int res = connect(client_fd_, (struct sockaddr *)&server_addr,
+      int res = connect(client_fd_, (struct sockaddr*)&server_addr,
                         sizeof(server_addr));
       if (res == 0) {
         break;
@@ -53,7 +53,7 @@ class BlockingRpcClient {
   }
 
   template <typename R, typename... Params>
-  RpcResponse<R> Call(const std::string &name, Params... params) {
+  RpcResponse<R> Call(const std::string& name, Params... params) {
     using args_type = std::tuple<typename std::decay<Params>::type...>;
     args_type args = std::make_tuple(params...);
 
@@ -64,7 +64,7 @@ class BlockingRpcClient {
   }
 
   template <typename R>
-  RpcResponse<R> Call(const std::string &name) {
+  RpcResponse<R> Call(const std::string& name) {
     codec::Serializer serializer;
     serializer.serialize(name);
     return NetCall<R>(serializer);
@@ -72,7 +72,7 @@ class BlockingRpcClient {
 
  private:
   template <typename R>
-  RpcResponse<R> NetCall(codec::Serializer &serializer) {
+  RpcResponse<R> NetCall(codec::Serializer& serializer) {
     const auto serialized_data = serializer.str();
 
     IOBuffer request_buffer(serialized_data.cbegin(), serialized_data.cend());
@@ -104,7 +104,7 @@ class BlockingRpcClient {
     return value;
   }
 
-  size_t ReadPacket(IOBuffer &buffer) {
+  size_t ReadPacket(IOBuffer& buffer) {
     char head_buffer[net::detail::HEADER_SIZE];
     size_t head_recv_size = 0;
     while (head_recv_size != net::detail::HEADER_SIZE) {
@@ -122,7 +122,7 @@ class BlockingRpcClient {
       head_recv_size += res;
     }
 
-    uint32_t total_read_size = *reinterpret_cast<uint32_t *>(head_buffer);
+    uint32_t total_read_size = *reinterpret_cast<uint32_t*>(head_buffer);
     buffer.resize(total_read_size);
     size_t already_read_size = 0;
     while (total_read_size != 0) {
@@ -145,11 +145,11 @@ class BlockingRpcClient {
     return already_read_size;
   }
 
-  size_t WritePacket(const IOBuffer &buffer) {
+  size_t WritePacket(const IOBuffer& buffer) {
     size_t total_write_size = buffer.size();
 
     char head_buffer[net::detail::HEADER_SIZE];
-    std::memcpy(head_buffer, reinterpret_cast<char *>(&total_write_size),
+    std::memcpy(head_buffer, reinterpret_cast<char*>(&total_write_size),
                 net::detail::HEADER_SIZE);
     auto res = write(client_fd_, head_buffer, net::detail::HEADER_SIZE);
     if (res <= 0) {

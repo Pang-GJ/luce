@@ -4,8 +4,8 @@
 #include <sys/socket.h>
 #include <cerrno>
 
-#include "luce/common/logger.hpp"
-#include "luce/net/socket.hpp"
+#include "luce/common/logger.h"
+#include "luce/net/socket.h"
 
 namespace net {
 
@@ -15,7 +15,7 @@ Socket::~Socket() {
     ::close(fd_);
   }
 }
-void Socket::BindAddress(const InetAddress &local_addr) {
+void Socket::BindAddress(const InetAddress& local_addr) {
   int ret = ::bind(fd_, local_addr.GetSockAddr(), sizeof(struct sockaddr));
   if (ret != 0) {
     LOG_FATAL("bind sockfd: {} failed, errno: {}", fd_, errno);

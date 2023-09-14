@@ -1,6 +1,6 @@
-#include "luce/common/json/Parser.hpp"
+#include "luce/common/json/Parser.h"
 #include <algorithm>
-#include "luce/common/json/JObject.hpp"
+#include "luce/common/json/JObject.h"
 
 namespace tinyjson {
 

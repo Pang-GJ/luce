@@ -1,11 +1,11 @@
-#include "luce/common/string_util.hpp"
+#include "luce/common/string_util.h"
 
 namespace String {
 
 template <typename T>
-void JoinImpl(const T &parts, std::string_view delim, std::string *result) {
+void JoinImpl(const T& parts, std::string_view delim, std::string* result) {
   size_t size = 0;
-  for (auto &&item : parts) {
+  for (auto&& item : parts) {
     size += item.size() + delim.size();
   }
   result->clear();
@@ -23,21 +23,21 @@ void JoinImpl(const T &parts, std::string_view delim, std::string *result) {
   }
 }
 
-std::string Join(const std::vector<std::string_view> &parts,
+std::string Join(const std::vector<std::string_view>& parts,
                  std::string_view delim) {
   std::string result;
   JoinImpl(parts, delim, &result);
   return result;
 }
 
-std::string Join(const std::vector<std::string> &parts,
+std::string Join(const std::vector<std::string>& parts,
                  std::string_view delim) {
   std::string result;
   JoinImpl(parts, delim, &result);
   return result;
 }
 
-std::string Join(const std::initializer_list<std::string_view> &parts,
+std::string Join(const std::initializer_list<std::string_view>& parts,
                  std::string_view delim) {
   std::string result;
   JoinImpl(parts, delim, &result);
@@ -53,7 +53,7 @@ bool EndsWith(std::string_view str, std::string_view suffix) {
          str.substr(str.size() - suffix.size()) == suffix;
 }
 
-void Replace(std::string &target, std::string_view from, std::string_view to,
+void Replace(std::string& target, std::string_view from, std::string_view to,
              std::size_t count) {
   auto p = target.find(from);
   while (p != std::string::npos && ((count--) != 0U)) {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "luce/common/logger.hpp"
-#include "luce/common/string_util.hpp"
-#include "luce/net/http/http_context.hpp"
+#include "luce/common/logger.h"
+#include "luce/common/string_util.h"
+#include "luce/net/http/http_context.h"
 
 #include <string>
 #include <unordered_map>
@@ -13,7 +13,7 @@ using HandleFunc = std::function<void(ContextPtr)>;
 
 struct Router {
   void AddRouter(std::string_view method, std::string_view url,
-                 const HandleFunc &handler) {
+                 const HandleFunc& handler) {
     if (method == "DELETE") {
       LOG_ERROR("could not DELETE now");
       return;
@@ -29,10 +29,10 @@ struct Router {
     handlers_[key] = handler;
   }
 
-  void Handle(const ContextPtr &ctx) {
+  void Handle(const ContextPtr& ctx) {
     auto key = String::Join({ctx->method_, ctx->path_}, "-");
     if (handlers_.contains(key)) {
-      const auto &handler = handlers_[key];
+      const auto& handler = handlers_[key];
       handler(ctx);
     } else {
       ctx->HTML(404, String::Format("404 Not Found: {} not at {}\n",

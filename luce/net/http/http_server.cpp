@@ -2,19 +2,19 @@
 #include <unistd.h>
 #include <cstdlib>
 
-#include "luce/common/file_util.hpp"
-#include "luce/common/logger.hpp"
-#include "luce/common/singleton.hpp"
-#include "luce/io/io_awaiter.hpp"
-#include "luce/net/http/http_request.hpp"
-#include "luce/net/http/http_response.hpp"
-#include "luce/net/http/http_server.hpp"
-#include "luce/net/tcp/tcp_connection.hpp"
-#include "luce/timer/timer.hpp"
+#include "luce/common/file_util.h"
+#include "luce/common/logger.h"
+#include "luce/common/singleton.h"
+#include "luce/io/io_awaiter.h"
+#include "luce/net/http/http_request.h"
+#include "luce/net/http/http_response.h"
+#include "luce/net/http/http_server.h"
+#include "luce/net/tcp/tcp_connection.h"
+#include "luce/timer/timer.h"
 
 namespace net::http {
 
-co::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer &server) {
+co::Task<> HttpServer::OnRequest(TcpConnectionPtr conn, TcpServer& server) {
   for (;;) {
     IOBuffer buffer(MAX_REQUEST_SIZE);
     auto timer_id =

@@ -8,7 +8,7 @@
 template <typename T>
 class BlockingQueue {
  public:
-  void push(T &&value) {
+  void push(T&& value) {
     {
       std::scoped_lock lock(mtx_);
       queue_.push(std::move(value));
@@ -16,7 +16,7 @@ class BlockingQueue {
     cond_.notify_one();
   }
 
-  bool try_push(const T &value) {
+  bool try_push(const T& value) {
     {
       std::unique_lock lock(mtx_, std::try_to_lock);
       if (!lock) {
@@ -28,7 +28,7 @@ class BlockingQueue {
     return true;
   }
 
-  bool pop(T *item) {
+  bool pop(T* item) {
     std::unique_lock lock(mtx_);
     cond_.wait(lock, [this]() { return !this->queue_.empty() || this->stop_; });
     if (queue_.empty()) {
@@ -40,7 +40,7 @@ class BlockingQueue {
   }
 
   // non-blocking pop an item, maybe failed
-  bool try_pop_if(T *item, bool (*predict)(T &) = nullptr) {
+  bool try_pop_if(T* item, bool (*predict)(T&) = nullptr) {
     std::unique_lock lock(mtx_, std::try_to_lock);
     if (!lock || queue_.empty()) {
       return false;

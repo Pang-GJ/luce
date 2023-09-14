@@ -1,5 +1,5 @@
-#include "luce/net/http/http_response.hpp"
-#include "luce/common/string_util.hpp"
+#include "luce/net/http/http_response.h"
+#include "luce/common/string_util.h"
 
 namespace net::http {
 
@@ -7,7 +7,7 @@ void HttpResponse::SetBody(std::string_view body) {
   buffer_.clear();
   buffer_ = http_version_ + " " + std::to_string(status_code_) + " " +
             GetCodeDescript(status_code_) + "\r\n";
-  for (auto &header : headers_) {
+  for (auto& header : headers_) {
     buffer_ += header.first + ":" + header.second + "\r\n";
   }
   buffer_ += "\r\n";

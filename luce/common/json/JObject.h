@@ -51,7 +51,7 @@ class JObject {
 
   explicit JObject(double_t value) { Double(value); }
 
-  explicit JObject(const str_t &value) { Str(value); }
+  explicit JObject(const str_t& value) { Str(value); }
 
   explicit JObject(list_t value) { List(std::move(value)); }
 
@@ -94,9 +94,9 @@ class JObject {
 
   string ToString();
 
-  JObject &operator[](const string &key) {
+  JObject& operator[](const string& key) {
     if (type_ == T_DICT) {
-      auto &dict = Value<dict_t>();
+      auto& dict = Value<dict_t>();
       return dict[key];
     }
     throw std::logic_error("not dict type! JObject::operator[]");
@@ -104,7 +104,7 @@ class JObject {
 
   void push_back(JObject item) {
     if (type_ == T_LIST) {
-      auto &list = Value<list_t>();
+      auto& list = Value<list_t>();
       list.push_back(std::move(item));
       return;
     }
@@ -113,7 +113,7 @@ class JObject {
 
   void pop_back() {
     if (type_ == T_LIST) {
-      auto &list = Value<list_t>();
+      auto& list = Value<list_t>();
       list.pop_back();
       return;
     }
@@ -124,7 +124,7 @@ class JObject {
   throw std::logic_error("type error in get " #type " value!")
 
   template <class V>
-  V &Value() {
+  V& Value() {
     // 添加安全检查
     if constexpr (IS_TYPE(V, str_t)) {
       if (type_ != T_STR) {
@@ -152,17 +152,17 @@ class JObject {
       }
     }
 
-    void *v = Value();
+    void* v = Value();
     if (v == nullptr) {
       throw std::logic_error("unknown type in JObject::Value()");
     }
-    return *static_cast<V *>(v);
+    return *static_cast<V*>(v);
   }
 
   TYPE Type() { return type_; }
 
  private:
-  void *Value();
+  void* Value();
 
   TYPE type_;
   value_t value_;

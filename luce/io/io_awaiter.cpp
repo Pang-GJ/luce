@@ -1,8 +1,8 @@
-#include "luce/io/io_awaiter.hpp"
+#include "luce/io/io_awaiter.h"
 #include <cerrno>
 
 namespace net {
-co::Task<size_t> AsyncRead(TcpConnection *conn, IOBuffer &buffer) {
+co::Task<size_t> AsyncRead(TcpConnection* conn, IOBuffer& buffer) {
   size_t init_read_size = buffer.size();
   size_t already_read_size = 0;
   bool need_read = true;
@@ -27,7 +27,7 @@ co::Task<size_t> AsyncRead(TcpConnection *conn, IOBuffer &buffer) {
   co_return already_read_size;
 }
 
-co::Task<size_t> AsyncWrite(TcpConnection *conn, const IOBuffer &buffer) {
+co::Task<size_t> AsyncWrite(TcpConnection* conn, const IOBuffer& buffer) {
   size_t total_write_size = buffer.size();
   size_t already_write_size = 0;
   while (total_write_size != 0) {
@@ -48,10 +48,10 @@ co::Task<size_t> AsyncWrite(TcpConnection *conn, const IOBuffer &buffer) {
   co_return already_write_size;
 }
 
-co::Task<bool> AsyncReadPacket(TcpConnection *conn, IOBuffer &buffer) {
+co::Task<bool> AsyncReadPacket(TcpConnection* conn, IOBuffer& buffer) {
   char head_buffer[detail::HEADER_SIZE];
   co_await detail::ReadInnerAwaiter(conn, head_buffer, detail::HEADER_SIZE);
-  uint32_t total_read_size = *reinterpret_cast<uint32_t *>(head_buffer);
+  uint32_t total_read_size = *reinterpret_cast<uint32_t*>(head_buffer);
   buffer.resize(total_read_size);
   uint32_t already_read_size = 0;
   while (total_read_size != 0) {
@@ -74,10 +74,10 @@ co::Task<bool> AsyncReadPacket(TcpConnection *conn, IOBuffer &buffer) {
   co_return true;
 }
 
-co::Task<bool> AsyncWritePacket(TcpConnection *conn, const IOBuffer &buffer) {
+co::Task<bool> AsyncWritePacket(TcpConnection* conn, const IOBuffer& buffer) {
   uint32_t total_write_size = buffer.size();
   char head_buffer[detail::HEADER_SIZE];
-  std::memcpy(head_buffer, reinterpret_cast<char *>(&total_write_size),
+  std::memcpy(head_buffer, reinterpret_cast<char*>(&total_write_size),
               detail::HEADER_SIZE);
   co_await detail::WriteInnerAwaiter(conn, head_buffer, detail::HEADER_SIZE);
   uint32_t already_write_size = 0;
