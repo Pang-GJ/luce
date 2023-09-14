@@ -3,150 +3,182 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <forward_list>
 #include <initializer_list>
+#include <iterator>
+#include <map>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
+#include "luce/codec/type_helper.h"
 #include "luce/common/stream_buffer.h"
+
 namespace codec {
 
 class Serializer {
  public:
-  enum ByteOrder { BigEndian, LittleEndian };
+  Serializer() = default;
+  explicit Serializer(const std::string &data)
+      : buffer_(data.begin(), data.end()) {}
 
-  Serializer() : byteorder_(LittleEndian) {}
-  ~Serializer() = default;
-  explicit Serializer(StreamBuffer buf, ByteOrder byteorder = LittleEndian)
-      : byteorder_(byteorder), stream_buf_(std::move(buf)) {}
+  using IterType = std::vector<char>::iterator;
+  using ConstIterType = std::vector<char>::const_iterator;
 
-  void reset() { stream_buf_.reset(); }
+  Serializer(IterType begin, IterType end) : buffer_(begin, end) {}
+  Serializer(ConstIterType begin, ConstIterType end) : buffer_(begin, end) {}
 
-  size_t size() const { return stream_buf_.size(); }
+  ConstIterType cbegin() const { return buffer_.cbegin(); }
+  ConstIterType cend() const { return buffer_.cend(); }
 
-  void skip_raw_data(int k) { stream_buf_.offset(k); }
+  template <typename T>
+  std::enable_if_t<std::is_arithmetic_v<T>, void> serialize(const T &value) {
+    const char *data = reinterpret_cast<const char *>(&value);
+    buffer_.insert(buffer_.end(), data, data + sizeof(value));
+  }
 
-  const char *data() const { return stream_buf_.data(); }
+  template <typename T>
+  std::enable_if_t<std::is_arithmetic_v<T>, void> deserialize(T *value) {
+    char *data = reinterpret_cast<char *>(value);
+    const auto size = sizeof(*value);
+    std::copy(buffer_.data() + deserialize_pos_,
+              buffer_.data() + deserialize_pos_ + size, data);
+    deserialize_pos_ += size;
+  }
 
-  void set_byte_order(char *in, int len) {
-    if (byteorder_ == BigEndian) {
-      std::reverse(in, in + len);
+  template <typename T>
+  std::enable_if_t<has_serialize_method_v<T>, void> serialize(const T &value) {
+    value.serialize(this);
+  }
+
+  template <typename T>
+  std::enable_if_t<has_deserialize_method_v<T>, void> deserialize(T *value) {
+    value->deserialize(this);
+  }
+
+  void serialize(const std::string &value) {
+    const auto size = value.size();
+    serialize(size);
+    buffer_.insert(buffer_.end(), value.begin(), value.end());
+  }
+
+  void deserialize(std::string *value) {
+    auto size = value->size();
+    deserialize(&size);
+    value->resize(size);
+    std::copy(buffer_.data() + deserialize_pos_,
+              buffer_.data() + deserialize_pos_ + size, value->begin());
+    deserialize_pos_ += size;
+  }
+
+  // // std::vector 的序列化和反序列化
+  // template <typename T>
+  // void serialize(const std::vector<T> &value) {
+  //   const auto size = value.size();
+  //   serialize(size);
+  //   std::for_each(value.cbegin(), value.cend(),
+  //                 [&](const T &item) { serialize(item); });
+  // }
+
+  // template <typename T>
+  // void deserialize(std::vector<T> *value) {
+  //   auto size = value->size();
+  //   deserialize(&size);
+  //   value->resize(size);
+  //   std::for_each(value->begin(), value->end(),
+  //                 [&](T &item) { deserialize(&item); });
+  // }
+
+  // 顺序容器的序列化和反序列化
+  template <typename Container>
+  std::enable_if_t<is_sequence_container_type_v<Container>, void> serialize(
+      const Container &value) {
+    uint32_t size = 0;
+    if constexpr (has_size_method_v<Container>) {
+      size = value.size();
+    } else {
+      for (auto iter = value.cbegin(); iter != value.cend(); ++iter) {
+        ++size;
+      }
+    }
+    serialize(size);
+    std::for_each(
+        value.cbegin(), value.cend(),
+        [&](const typename Container::value_type &item) { serialize(item); });
+  }
+
+  template <typename Container>
+  std::enable_if_t<is_sequence_container_type_v<Container>, void> deserialize(
+      Container *value) {
+    uint32_t size = 0;
+    deserialize(&size);
+    value->resize(size);
+    std::for_each(
+        value->begin(), value->end(),
+        [&](typename Container::value_type &item) { deserialize(&item); });
+  }
+
+  // std::forward_list: (为什么没有size方法.....)
+  // template <typename T>
+  // void serialize(const std::forward_list<T> &value) {
+  //   std::list<T> tmp{value.cbegin(), value.cend()};
+  //   serialize(tmp);
+  // }
+
+  // template <typename T>
+  // void deserialize(std::forward_list<T> *value) {
+  //   std::list<T> tmp;
+  //   deserialize(&tmp);
+  //   value->assign(tmp.begin(), tmp.end());
+  // }
+
+  // std::map 的序列化和反序列化
+  template <typename Key, typename Value>
+  void serialize(const std::map<Key, Value> &value) {
+    const auto size = value.size();
+    serialize(size);
+    for (const auto &[key, val] : value) {
+      serialize(key);
+      serialize(val);
     }
   }
 
-  void write_raw_data(char *in, int len) {
-    stream_buf_.input(in, len);
-    // stream_buf_.offset(len);
+  template <typename Key, typename Value>
+  void deserialize(std::map<Key, Value> *value) {
+    auto size = value->size();
+    deserialize(&size);
+    for (auto i = 0; i < size; ++i) {
+      Key key;
+      Value val;
+      deserialize(key);
+      deserialize(val);
+      (*value)[key] = val;
+    }
   }
 
-  const char *current() const { return stream_buf_.current(); }
+  // std::tuple 的序列化和反序列化
+  template <typename... Args>
+  void serialize(const std::tuple<Args...> &value) {
+    std::apply([&](const Args &...args) { (serialize(args), ...); }, value);
+  }
+
+  template <typename... Args>
+  void deserialize(std::tuple<Args...> *value) {
+    std::apply([&](Args &...args) { (deserialize(&args), ...); }, *value);
+  }
+
+  std::string str() const { return {buffer_.begin(), buffer_.end()}; }
+
+  size_t size() const { return buffer_.size(); }
 
   void clear() {
-    stream_buf_.clear();
-    reset();
-  }
-
-  template <typename T>
-  void output_type(T &t);
-
-  void output_type(std::string &in);
-
-  template <typename T>
-  void input_type(const T &t);
-
-  void input_type(const std::string &in);
-
-  void input_type(const char *in);
-
-  void get_length_mem(char *p, int len) {
-    std::memcpy(p, stream_buf_.current(), len);
-    stream_buf_.offset(len);
-  }
-
-  template <typename Tuple, std::size_t id>
-  void getv(Serializer &s, Tuple &t) {
-    s >> std::get<id>(t);
-  }
-
-  template <typename Tuple, std::size_t... I>
-  Tuple get_tuple(std::index_sequence<I...> index_sequence) {
-    Tuple t;
-    std::initializer_list<int>{((getv<Tuple, I>(*this, t)), 0)...};
-    return t;
-  }
-
-  template <typename T>
-  Serializer &operator>>(T &item) {
-    output_type(item);
-    return *this;
-  }
-
-  template <typename T>
-  Serializer &operator<<(T item) {
-    input_type(item);
-    return *this;
+    buffer_.clear();
+    deserialize_pos_ = 0;
   }
 
  private:
-  ByteOrder byteorder_;
-  StreamBuffer stream_buf_;
+  std::vector<char> buffer_;
+  int deserialize_pos_ = 0;
 };
-
-template <typename T>
-inline void Serializer::output_type(T &t) {
-  const auto len = sizeof(t);
-  char *buffer = new char[len];
-  if (!stream_buf_.is_eof()) {
-    std::memcpy(buffer, stream_buf_.current(), len);
-    stream_buf_.offset(len);
-    set_byte_order(buffer, len);
-    t = *reinterpret_cast<T *>(buffer);
-  }
-  delete[] buffer;
-}
-
-inline void Serializer::output_type(std::string &in) {
-  const auto marklen = sizeof(uint16_t);
-  char *buffer = new char[marklen];
-  std::memcpy(buffer, stream_buf_.current(), marklen);
-  stream_buf_.offset(marklen);
-  set_byte_order(buffer, marklen);
-  const auto len = *reinterpret_cast<uint16_t *>(buffer);
-  delete[] buffer;
-  if (len == 0) {
-    return;
-  }
-  in.insert(in.begin(), stream_buf_.current(), stream_buf_.current() + len);
-  stream_buf_.offset(len);
-}
-
-template <typename T>
-inline void Serializer::input_type(const T &t) {
-  const auto len = sizeof(t);
-  char *buffer = new char[len];
-  const char *p = reinterpret_cast<const char *>(&t);
-  std::memcpy(buffer, p, len);
-  set_byte_order(buffer, len);
-  stream_buf_.input(buffer, len);
-  delete[] buffer;
-}
-
-inline void Serializer::input_type(const std::string &in) {
-  // 先存入字符串长度
-  uint16_t len = in.size();
-  char *p = reinterpret_cast<char *>(&len);
-  set_byte_order(p, sizeof(uint16_t));
-  stream_buf_.input(p, sizeof(uint16_t));
-
-  if (len == 0) {
-    return;
-  }
-  char *buffer = new char[len];
-  std::memcpy(buffer, in.c_str(), len);
-  stream_buf_.input(buffer, len);
-  delete[] buffer;
-}
-
-inline void Serializer::input_type(const char *in) {
-  input_type<std::string>(std::string(in));
-}
 
 }  // namespace codec
